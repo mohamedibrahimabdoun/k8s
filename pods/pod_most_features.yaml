@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod-most-features
+ labels:
+  app: most-features
+spec:
+ volumes:
+  - name: "disk01"
+    hostPath: 
+     path:  "/k8s/volumes/vol1"
+  - name: "nfsdisk01"
+    nfs:
+     server: master
+     path: "/export/users"
+ containers:
+  - image: gcr.io/kuar-demo/kuard-amd64:1
+    name: kuard
+    ports:
+     - containerPort: 8089
+       name: httpport
+       protocol: TCP
+    resources:
+     requests:
+      cpu: "500m"
+      memory: "128Mi"
+     limits:
+      cpu: "1000m"
+      memory: "256Mi"
+    volumeMounts:
+     - mountPath: "/disk01"
+       name: "disk01"
+     - mountPath: "/nfsmount"
+       name: "nfsdisk01"
+    livenessProbe:
+     httpGet:
+      path: /healthy
+      port: 8080
+     initialDelaySeconds: 5
+     timeoutSeconds: 1
+     periodSeconds: 10
+     failureThreshold: 3
+    readinessProbe:
+     httpGet:
+       path: /ready
+       port: 8080
+     initialDelaySeconds: 30
+     timeoutSeconds: 1
+     periodSeconds: 10
+     failureThreshold: 3
+     

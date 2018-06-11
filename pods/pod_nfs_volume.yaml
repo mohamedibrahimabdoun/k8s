@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod-nfs-volume
+spec:
+ volumes:
+  - name: "vol1"
+    nfs:
+     server: master
+     path: "/export/users"
+ containers:
+ - image: nginx
+   name: nginx
+   tty: true
+   volumeMounts:
+    - mountPath: "/vol1"
+      name: "vol1"
+   ports:
+   - containerPort: 8080
+     name: http
+     protocol: TCP

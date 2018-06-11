@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod-volumes
+spec:
+ volumes:
+  - name: "vol1"
+    hostPath:
+     path: "/k8s/volumes/vol1"
+ containers:
+ - image: nginx
+   name: nginx
+   tty: true
+   volumeMounts:
+    - mountPath: "/vol1"
+      name: "vol1"
+   ports:
+   - containerPort: 8080
+     name: http
+     protocol: TCP

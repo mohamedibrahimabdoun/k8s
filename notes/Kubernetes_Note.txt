@@ -1,0 +1,78 @@
+https://www.mirantis.com/blog/how-install-kubernetes-kubeadm/
+
+https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/calico
+
+	 kubeadm init --api-advertise-addresses 172.172.0.100
+	 ##--network-plugin=cni 
+	 
+	 kubeadm init --pod-network-cidr=192.168.0.0/24   --apiserver-advertise-address 172.172.1.10
+	 
+	mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+OR For Root access :
+--------------
+export KUBECONFIG=/etc/kubernetes/admin.conf
+
+# --network-plugin=cni 	
+
+kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml
+
+	
+	kubeadm join 172.172.1.10:6443 --token zdnfge.m0blw3vl4s2wezs2 --discovery-token-ca-cert-hash sha256:840a8dbeb93721f4e10eed6211609e8af668cd054f7c655f8a54fb090e330790
+	
+	
+	
+	=========================================================
+	
+	 kubectl delete namespace kube-system 
+	 
+	 
+	 sudo kubeadm reset
+	 
+	 
+	 kubectl -n sock-shop get svc kube-system
+	 
+	 ##################Adding Node############
+	  kubeadm token create --print-join-command
+	  
+	 ##############Calico INstallation@###################
+	 
+	 kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml
+	 
+################################## #dashBoard#################################################################################################
+	 
+	 kubectl create -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+	 
+	 
+	 kubectl -n kube-system edit service kubernetes-dashboard
+	 ##. Change type: ClusterIP to type: NodePort and save file. If it's already changed go to next step.
+	 kubectl proxy
+	 
+	 kubectl --namespace kube-system delete deployment kubernetes-dashboard
+	 
+	 #######Steps for enabling remote dashboard access
+	 http://www.joseluisgomez.com/containers/kubernetes-dashboard/
+	 https://www.kevinhooke.com/2017/10/20/deploying-kubernetes-dashboard-to-a-kubeadm-created-cluster/
+	 
+	 * Accessing API from outside:
+		https://medium.com/@lestrrat/accessing-the-kubernetes-api-sans-the-proxy-b24af1eb18a4
+		https://docs.giantswarm.io/guides/accessing-services-from-the-outside/
+		https://github.com/kubernetes/dashboard/wiki/Integrations
+	 
+	 http://nodeip:nodeport
+	 http://172.172.13:30632/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/
+	 #####################Canal Installation@@####################
+	 
+	 kubectl apply -f https://raw.githubusercontent.com/projectcalico/canal/master/k8s-install/1.7/rbac.yaml
+	 kubectl apply -f https://raw.githubusercontent.com/projectcalico/canal/master/k8s-install/1.7/canal.yaml
+
+#########################commands##########################
+ kubectl -n kube-system describe pod kube-dns
+ kubectl get all --all-namespaces
+
+
+Useful Bolgs :
+---------------
+https://kukulinski.com/10-most-common-reasons-kubernetes-deployments-fail-part-1/

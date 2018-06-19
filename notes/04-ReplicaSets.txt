@@ -1,0 +1,78 @@
+ * A ReplicaSet acts as a cluster-wide Pod manager, ensuring that the right types and number of Pods are running at all times.
+ 
+ 
+apiVersion: extensions/v1beta1
+kind: ReplicaSet
+metadata:
+ name: kuard
+spec:
+ replicas: 1
+ template:
+  metadata:
+   labels:
+    app: kuard
+    version: "2"
+  spec:
+    containers:
+     - name: kuard
+       image: "gcr. io/kuar- demo/kuard- amd64: 2"
+  
+Creating a ReplicaSet:
+----------------------
+$ kubectl apply - f kuard- rs. yaml
+* Once the kuard ReplicaSet has been accepted, the ReplicaSet controller will detect there are no kuard Pods running that match the desired state, and a new kuard Pod will be created based on the contents of the Pod template.
+
+Inspecting a ReplicaSet:
+=======================
+
+$ kubectl describe rs kuard
+
+I) Finding a ReplicaSet from a Pod:
+-----------------------------------
+* Sometimes you may wonder if a Pod is being managed by a ReplicaSet, and, if it is, which ReplicaSet.
+* To enable this kind of discovery, the ReplicaSet controller adds an annotation to every Pod that it creates. The key for the annotation is kubernetes. io/createdby.
+
+$ kubectl get pods <pod-name> - o yaml
+
+II)Finding a Set of Pods for a ReplicaSet:
+------------------------------------------
+	$ kubectl get pods - l app=kuard, version=2
+
+
+Scaling ReplicaSets:
+=====================
+* ReplicaSets are scaled up or down by updating the spec. replicas key on the ReplicaSet object stored in Kubernetes.
+Imperative Scaling with kubectl Scale:
+---------------------------------------
+*  to achieve this is using the scale command in kubectl:
+	$ kubectl scale kuard - - replicas=4
+
+* Any imperative changes are immediately followed by a declarative change in source control
+
+Declaratively Scaling with kubectl apply:
+----------------------------------------
+* we make changes by editing the configuration file in version control and then applying those changes to our cluster.
+ 
+ . . .
+spec:
+ replicas: 3
+. . .
+
+Autoscaling a ReplicaSet:
+-------------------------
+# Horizontal pod autoscaling (HPA).: 
+	 Kubernetes makes a distinction between horizontal scaling, which involves creating additional replicas of a Pod, and vertical scaling, which involves increasing the resources required for a particular Pod (e.g., increasing the CPU required for the Pod). 
+# Autoscaling based on CPU:
+	$ kubectl autoscale rs kuard - - min=2 - - max=5 - - cpu- percent=80
+
+* To view, modify, or delete this resource you can use the standard kubectl commands and the horizontalpodautoscalers resource.
+	$ kubectl get hpa
+	
+Deleting ReplicaSets:
+====================
+$ kubectl delete rs kuard
+
+* If you don’t want to delete the Pods that are being managed by the ReplicaSet you can set the - - cascade flag to false to ensure only the ReplicaSet object is deleted and not the Pods:
+	$ kubectl delete rs kuard --cascade=false
+
+	

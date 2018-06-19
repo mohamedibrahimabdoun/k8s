@@ -1,0 +1,55 @@
+Contexts:
+---------
+to change the default namespace more permanently
+
+$ kubectl config set-context my-context --namespace=mystuff
+
+creates a new context, but it doesn’t actually start using it yet
+$ kubectl config use- context my- context
+
+Contexts can also be used to manage different clusters or different users for authenticating to those clusters using the --users or --clusters flags with the set- context command.
+
+
+
+Viewing Kubernetes API Objects:
+===============================
+to get a specific resource, you can use :
+kubectl get <resource- name> <object- name>.
+
+* you can also view the objects as raw JSON or YAML using the -o json or -o yaml flags
+* to remove the headers, which is often useful when combining kubectl with Unix pipes (e.g., kubectl … | awk …). If you specify the --no-headers flag.
+* more detailed information about a particular object:
+	$ kubectl describe <resource-name> <obj-name>
+	
+
+Creating, Updating, and Destroying Kubernetes Objects :-
+=========================================================
+* Let’s assume that you have a simple object stored in obj.yaml. You can use kubectl to create this object in Kubernetes by running:	
+	$ kubectl apply - f obj . yaml
+	
+* after you make changes to the object, you can use the apply command again to update the object.
+* When you want to delete an object, you can simply run:
+	$ kubectl delete - f obj . yaml
+* you can delete an object using the resource type and name:
+	$ kubectl delete <resource-name> <obj-name>
+	
+Labeling and Annotating Objects :
+=================================
+* to add the color=red label to a pod named bar, you can run:
+	$ kubectl label pods bar color=red
+* If you want to remove a label, you can use the - <label- name> syntax:
+	$ kubectl label pods bar - color
+	
+Debugging Commands:
+===================
+$ kubectl logs <pod-name>
+* If you have multiple containers in your pod you can choose the container to view using the -c flag.
+* If you instead want to continuously stream the logs back to the terminal without exiting, you can add the -f (follow) command-line flag
+* use the exec command to execute a command in a running container:
+	$ kubectl exec -it <pod-name> --bash
+*you can copy files to and from a container using the cp command , This will copy a file from a running container to your local machine:
+	$ kubectl cp <pod-name>: /path/to/remote/file /path/to/local/file
+	
+	
+
+	

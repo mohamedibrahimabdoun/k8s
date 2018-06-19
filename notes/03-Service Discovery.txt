@@ -1,0 +1,98 @@
+ Service Discovery:
+ ==================
+ * Service discovery tools help solve the problem of finding which processes are listening at which addresses for which services
+ * A Service obj ect is a way to create a named label selector. 
+ * we can use kubectl expose to create a service
+ 
+ $ kubectl run alpaca- prod --image=gcr.io/kuar-demo/kuard-amd64:1 --replicas=3 --port=8080 --labels="ver=1, app=alpaca, env=prod"
+ $ kubectl expose deployment alpaca- prod
+ $ kubectl run bandicoot- prod --image=gcr.io/kuar-demo/kuard-amd64:2 --replicas=2 --port=8080 --labels="ver=2, app=bandicoot, env=prod"
+ $ kubectl expose deployment bandicoot- prod
+ $ kubectl get services - o wide
+ 
+ *The kubernetes service is automatically created for you so that you can find and talk to the Kubernetes API from within the app.
+ * The kubectl expose command will conveniently pull both the label selector and the relevant ports (8080, in this case) from the deployment definition.
+ * To interact with services, we are going to port-forward to one of the alpaca Pods .Start and leave this command running in a terminal window:
+	$ ALPACA_POD=$(kubectl get pods - l app=alpaca  -o jsonpath=' {. items[0] . metadata. name}' )
+	$ kubectl port-forward $ALPACA_POD 48858: 8080
+
+Service DNS:
+------------
+* Kubernetes provides a DNS service exposed to Pods running in the cluster. This Kubernetes DNS service was installed as a system component when the cluster was first created. 
+alpaca- prod. default. svc. cluster. local. 30 IN A 10. 115. 245. 13
+- alpaca- prod : The name of the service in question.
+= default : The namespace that this service is in.
+= svc:: Recognizing that this is a service. This allows Kubernetes to expose other types ofthings as DNS in the future. cluster. local.
+
+Readiness Checks:
+-----------------
+
+
+$ kubectl edit deployment/alpaca- prod
+
+spec:
+. . .
+template:
+. . .
+spec:
+ containers:
+  . . .
+  name: alpaca- prod
+  readinessProbe:
+   httpGet:
+   path: /ready
+  port: 8080
+  periodSeconds: 2
+  initialDelaySeconds: 0
+  failureThreshold: 3
+  successThreshold: 1
+* Updating the deployment definition like this will delete and recreate the alpaca pods. As such, we need to restart our port- forward command from earlier:
+* Endpoints are a lower-level way of finding what a service is sending traffic  
+* The --watch option here causes the kubectl command to hang around and output any updates. 
+  $ kubectl get endpoints alpaca-prod --watch
+
+Looking Beyond the Cluster:
+---------------------------
+* Oftentimes the IPs for pods are only reachable from within the cluster. At some point, we have to allow new traffic in!.The most portable way to do this is to use a feature called NodePorts.
+* You use the NodePort without knowing where any of the Pods for that service are running. This can be integrated with hardware or software load balancers to expose the service further.
+
+$ kubectl edit service alpaca- prod
+
+* Change the spec. type field to NodePort .You can also do this when creating the service via kubectl expose by specifying --type=NodePort.The system will assign a new NodePort:
+* If your cluster is in the cloud someplace, you can use SSH tunneling with something like this:
+	$ ssh <node> - L 8080: localhost: 32711
+	
+Cloud Integration:
+------------------
+* f you have support from the cloud that you are running on (and your cluster is configured to take advantage of it) you can use the LoadBalancer type.
+* This builds on NodePorts by additionally configuring the cloud to create a new load balancer and direct it at nodes in your cluster
+
+
+Endpoints:
+===========
+* Some applications (and the system itself) want to be able to use services without using a cluster IP. This is done with another type of object called Endpoints.
+*  For every Service object, Kubernetes creates a buddy Endpoints object that contains the IP addresses for that service:
+
+	$ kubectl describe endpoints alpaca- prod
+	
+$ kubectl get endpoints alpaca-prod --watch
+NAME ENDPOINTS AGE
+alpaca- prod 10. 112. 1. 54: 8080, 10. 112. 2. 84: 8080, 10. 112. 2. 85: 8080 1m
+
+$ kubectl delete deployment alpaca- prod
+$ kubectl run alpaca- prod --image=gcr.io/kuar-demo/kuard-amd64:1 --replicas=3 --port=8080 --labels="ver=1, app=alpaca, env=prod"
+
+Manual Service Discovery:
+-------------------------
+
+
+
+Cluster IP Environment Variables:
+---------------------------------
+While most users should be using the DNS services to find cluster IPs, there are some older mechanisms that may still be in use. One of these is injecting a set of environment variables into pods as they start up.
+
+	$ BANDICOOT_POD=$(kubectl get pods -l app=bandicoot -o jsonpath='{.items[0].metadata.name}' )
+	$ kubectl port- forward $BANDICOOT_POD 48858: 8080
+
+	The two main environment variables to use are ALPACA_PROD_SERVICE_HOST and ALPACA_PROD_SERVICE_PORT. The other environment variables are created to be compatible with (now deprecated) Docker link variables.
+

@@ -1,0 +1,204 @@
+ * A Job creates Pods that run until successful termination (i.e., exit with 0). 
+ The Job Object:
+ ==============
+ * These pods generally run until successful completion. 
+ * If the Pod fails before a successful termination, the Job controller will create a new Pod based on the Pod template in the Job specification
+ *  there is a small chance, during certain failure scenarios, that duplicate pods will be created for a specific task.
+ 
+ Job Patterns:
+ =============
+ * By default each Job runs a single Pod once until successful termination. 
+ * This Job pattern is defined by two primary attributes of a Job, namely the number of Job completions and the number of Pods to run in parallel.
+ * In the case of the “run once until completion” pattern, the completions and parallelism parameters are set to 1
+ 
+1)One Shot:
+ ---------
+ * One-shot Jobs provide a way to run a single Pod once until successful termination.
+ * In all Failure cases the Job controller is responsible for recreating the Pod until a successful termination occurs.
+ 
+	$ kubectl run -i oneshot --image=gcr.io/kuar-demo/kuard-amd64:1 --restart=OnFailure \
+	-- --keygen-enable --keygen-exit-on-complete --keygen-num-to-gen 10
+	
+* The - i option to kubectl indicates that this is an interactive command.kubectl will wait until the Job is running and then show the log output from the first (and in this case only) pod in the Job.
+* --restart=OnFailure is the option that tells kubectl to create a Job object.
+* All of the options after - - are command-line arguments to the container image. These instruct our test server (kuard) to generate 10 4,096-bit SSH keys and then exit.
+* Your output may not match this exactly. kubectl often misses the first couple of lines of output with the -i option.
+*  Delete the Job before continuing:
+	$ kubectl delete j obs oneshot
+
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+ name: oneshot
+ labels:
+  chapter: j obs
+spec:
+ template:
+  metadata:
+   labels:
+    chapter: j obs
+  spec:
+   containers:
+    - name: kuard
+      image: gcr. io/kuar- demo/kuard- amd64: 1
+      imagePullPolicy: Always
+      args:
+      - "-- keygen-enable"
+	  - "--keygen-exit-on-complete"
+	  - "--keygen-num-to-gen=10"
+	restartPolicy: OnFailure
+
+$ kubectl describe jobs oneshot
+$ kubectl logs oneshot-4kfdt
+
+2) Parallelism :
+----------------
+Generating keys can be slow. Let’s start a bunch of workers together to make key
+generation faster. We’re going to use a combination of the completions and
+parallelism parameters. Our goal is to generate 100 keys by having 10 runs of
+kuard with each run generating 10 keys. But we don’t want to swamp our
+cluster, so we’ll limit ourselves to only five pods at a time.
+
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+ name: parallel
+ labels:
+  chapter: jobs
+spec:
+ parallelism: 5
+ completions: 10
+ template:
+  metadata:
+   labels:
+    chapter: j obs
+ spec:
+  containers:
+  - name: kuard
+    image: gcr. io/kuar- demo/kuard- amd64: 1
+    imagePullPolicy: Always
+    args:
+    - "- - keygen- enable"
+    - "- - keygen- exit- on- complete"
+    - "- - keygen- num- to- gen=10"
+  restartPolicy: OnFailure
+
+  $ kubectl get pods - w
+  
+3) Work Queues :
+--------------
+A common use case for Jobs is to process work from a work queue. In this
+scenario, some task creates a number of work items and publishes them to a
+work queue. A worker Job can be run to process each work item until the work
+queue is empty
+
+ ---------          -------------         ---------
+|Producer |  ===>  | Worker Queue|  ===> |Consumer |
+ ----------         -------------         ---------
+Starting a work queue:
+----------------------
+rs-queue.yaml:
+
+apiVersion: extensions/v1beta1
+kind: ReplicaSet
+metadata:
+ labels:
+  app: work-queue
+  component: queue
+  chapter: jobs
+ name: queue
+spec:
+ replicas: 1
+ template:
+  metadata:
+   labels:
+    app: work-queue
+    component: queue
+    chapter: jobs
+ spec:
+  containers:
+  - name: queue
+    image: "gcr.io/kuar-demo/kuard-amd64:1"
+    imagePullPolicy: Always
+ 
+
+ $ kubectl apply -f rs-queue.yaml
+
+* Let’s use port forwarding to connect to it. Leave this command running in a terminal window:
+    $ QUEUE_POD=$(kubectl get pods -l app=work-queue,component=queue -o jsonpath='{.items[0].metadata.name}')
+    $ kubectl port-forward $QUEUE_POD 8080:8080
+* You can open your browser to http://localhost:8080 and see the kuard interface.Switch to the “MemQ Server” tab to keep an eye on what is going on.
+* With the work queue server in place, we should expose it using a service. This will make it easy for producers and consumers to locate the work queue via DNS,  Below :
+
+apiVersion: v1
+kind: Service
+metadata:
+ labels:
+  app: work-queue
+  component: queue
+  chapter: jobs
+ name: queue
+spec:
+ ports:
+ - port: 8080
+   protocol: TCP
+   targetPort: 8080
+ selector:
+  app: work-queue
+  component: queue
+
+ $ kubectl apply -f service-queue.yaml
+
+Loading up the queue :
+---------------------
+
+# Create a work queue called 'keygen'
+curl -X PUT localhost:8080/memq/server/queues/keygen
+# Create 100 work items and load up the queue.
+for i in work-item-{0..99}; do
+ curl -X POST localhost:8080/memq/server/queues/keygen/enqueue -d "$i"
+done
+
+$ curl 127.0.0.1:8080/memq/server/stats
+
+
+Creating the consumer job :
+--------------------------
+job-consumers.yaml:
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+ labels:
+  app: message-queue
+  component: consumer
+  chapter: jobs
+ name: consumers
+spec:
+ parallelism: 5
+ template:
+  metadata:
+   labels:
+    app: message-queue
+    component: consumer
+    chapter: jobs
+  spec:
+   containers:
+   - name: worker
+     image: "gcr.io/kuar-demo/kuard-amd64:1"
+     imagePullPolicy: Always
+     args:
+     - "--keygen-enable"
+     - "--keygen-exit-on-complete"
+     - "--keygen-memq-server=http://queue:8080/memq/server"
+     - "--keygen-memq-queue=keygen"
+ restartPolicy: OnFailure
+ 
+$ kubectl apply -f job-consumers.yaml
+
+* Note there are five pods running in parallel.These pods will continue to run until the work queue is empty.
+
+$ kubectl delete rs,svc,job -l chapter=jobs
+  

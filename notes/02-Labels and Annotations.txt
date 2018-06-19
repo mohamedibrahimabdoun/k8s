@@ -1,0 +1,72 @@
+ 
+ Labels:   
+	* key/value pairs that can be attached to Kubernetes objects such as Pods and ReplicaSets. 
+	* useful for attaching identifying information to Kubernetes objects. Labels provide the foundation for grouping objects.
+	* Labels provide identifying metadata for objects. These are fundamental qualities of the object that will be used for grouping, viewing, and operating
+	* Label keys can be broken down into two parts: an optional prefix and a name, separated by a slash.The prefix, if specified, must be a DNS subdomain with a 253-character limit. The key name is required and must be shorter than 63 characters.
+	
+Applying Labels:
+----------------
+$ kubectl run bandicoot-prod     --image=gcr.io/kuar-demo/kuard-amd64:2 --replicas=2  --labels="ver=2, app=bandicoot, env=prod"
+$ kubectl run bandicoot-staging  --image=gcr.io/kuar-demo/kuard- amd64:2 --replicas=1 --labels="ver=2, app=bandicoot,env=staging"
+
+$ kubectl get deployments --show-labels
+
+Modifying Labels:
+-----------------
+$ kubectl label deployments alpaca-test "canary=true"
+* You can also use the - L option to kubectl get to show a label value as a column:
+	$ kubectl get deployments - L canary
+* You can remove a label by applying a dash suffix:
+	$ kubectl label deployments alpaca-test "canary- "
+Label Selectors:
+----------------
+* Label selectors are used to filter Kubernetes objects based on a set of labels.
+* If we only wanted to list pods that had the ver label set to 2 we could use the --selector flag;-
+	$ kubectl get pods --selector="ver=2"
+* If we specify two selectors separated by a comma, only the objects that satisfy both will be returned. This is a logical AND operation:
+	$ kubectl get pods --selector="app=bandicoot, ver=2"
+* We can also ask if a label is one of a set of values. Here we ask for all pods where the app label is set to alpaca or bandicoot	:
+	$ kubectl get pods --selector="app in (alpaca, bandicoot) "
+* we can ask if a label is set at all. Here we are asking for all of the deployments with the canary label set to anything:
+	$ kubectl get deployments --selector="canary"
+* There are also “negative” versions of each of these:
+	key=value
+	key!=value
+	key in ( value1, value2)    : key is one of value1 or value2
+	key notin ( value1, value2) : key is not one of value1 or value2
+	key 						: key is set
+	!key 						: key is not set
+Label Selectors in API Objects :
+---------------------------------
+
+A selector of app=alpaca, ver in ( 1, 2) would be converted to this:
+selector:
+  matchLabels:
+    app: alpaca
+  matchExpressions:
+   - {key: ver, operator: In, values: [1, 2] }
+
+* All of the terms are evaluated as a logical AND. The only way to represent the ! = operator is to convert it to a NotIn expression with a single value. 
+* The selector app=alpaca, ver=1 would be represented like this:
+	selector:
+		app: alpaca
+		ver: 1
+
+
+#########################################################################################################
+Annotations :
+	*  annotations are key/value pairs designed to hold nonidentifying information that can be leveraged by tools and libraries.
+	* While labels are used to identify and group objects, annotations are used to provide extra information about where an object came from, how to use it, or policy around that object. 
+	* Annotations are used to:
+		# Communicate a specialized scheduling policy to a specialized scheduler.
+		# Build, release, or image information that isn’t appropriate for labels (may include a Git hash, timestamp, PR number, etc.)
+		# Enable the Deployment object (Chapter 12) to keep track of ReplicaSets that it is managing for rollouts.
+Defining Annotations:
+---------------------
+* because they are often used to communicate information between tools, the “namespace” part of the key is more important
+
+metadata:
+ annotations:
+   example. com/icon-url: "https://example.com/icon.png"
+

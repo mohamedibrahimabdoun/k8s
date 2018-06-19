@@ -1,0 +1,242 @@
+ * A Pod represents a collection of application containers and volumes running in the same execution environment.
+ * Each container within a Pod runs in its own cgroup, but they share a number of Linux namespaces.
+ * Applications running in the same Pod share the same IP address and port space (network namespace), have the same hostname (UTS namespace), and cancommunicate using native interprocess communication channels over System V IPC or POSIX message queues (IPC namespace)
+ Creating a Pod:-
+ ================
+ $ kubectl run kuard --image=gcr.io/kuar-demo/kuard-amd64:1
+ $ kubectl get pods
+ $ kubectl delete deployments/kuard
+ 
+ Creating a Pod Manifest:
+ ========================
+ * Pod manifests include a couple of key fields and attributes: mainly a metadata section for describing the Pod and its labels, a spec section for describing volumes, and a list of containers that will run in the Pod.
+----------- 
+apiVersion: v1
+kind: Pod
+metadata:
+ name: kuard
+ namespace: mynamespace
+spec:
+ containers:
+ - image: gcr.io/kuar-demo/kuard-amd64:1
+   name: kuard
+   ports:
+   - containerPort: 8080
+     name: myhttpport
+     protocol: TCP
+
+----------------
+
+$ kubectl apply - f kuard-pod. yaml
+
+Listing Pods:
+-------------
+$ kubectl get pods
+
+Pod Details:
+------------
+$ kubectl describe pods kuard
+
+Deleting a Pod:
+---------------
+$ kubectl delete pods/kuard
+$ kubectl delete -f kuard- pod.yaml
+
+Accessing Your Pod:
+-------------------
+1) Using Port Forwarding: 
+	a secure tunnel is created from your local machine, through the Kubernetes master, to the instance of the Pod running on one of the worker nodes
+		$ 
+		
+2) Getting More Info with Logs : 
+	* Adding the - f flag will cause you to continuously stream logs :
+	$ kubectl logs kuard
+	* Adding the --previous flag will get logs from a previous instance ofthe container.
+3) Running Commands in Your Container with exec:
+	$ kubectl exec kuard date
+	$ kubectl exec - it kuard ash
+4) Copying Files to and from Containers :
+	$ kubectl cp <pod-name>:/captures/capture3.txt . /capture3.txt
+	* to copy files from your local machine into a container. 
+		$ kubectl cp $HOME/config.txt <pod-name>:/config.txt
+
+Health Checks:
+===============
+* Kubernetes introduced health checks for application liveness. Liveness health checks run application-specific logic (e.g., loading a web page) to verify that the application is not just still running, but is functioning properly
+
+Liveness Probe:
+--------------
+* defined per container, which means each container inside a Pod is health-checked separately
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kuard
+spec:
+  containers:
+   - image: gcr.io/kuar-demo/kuard-amd64:1
+     name: kuard
+     livenessProbe:
+      httpGet:
+        path: /healthy
+        port: 8080
+      initialDelaySeconds: 5
+      timeoutSeconds: 1
+      periodSeconds: 10
+      failureThreshold: 3
+     ports:
+     - containerPort: 8080
+       name: http
+protocol: TCP
+		 
+Readiness Probe:
+----------------
+* Liveness determines if an application is running properly. Containers that fail liveness checks are restarted. Readiness describes when a container is ready to serve user requests .
+* Containers that fail readiness checks are removed from service load balancers. 
+
+
+Types of Health Checks:
+-----------------------
+* Kubernetes also supports tcpSocket health checks that open a TCP socket;
+* Kubernetes allows exec probes. These execute a script or program in the context of the container
+* if this script returns a zero exit code, the probe succeeds; otherwise, it fails.
+
+
+
+Resource Management:
+====================
+Resource Requests: Minimum Required Resources:
+----------------------------------------------
+* The most commonly requested resources are CPU and memory, but Kubernetes has support for other resource types as well, such as GPUs and more.
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kuard
+spec:
+ containers:
+ - image: gcr. io/kuar- demo/kuard- amd64: 1
+   name: kuard
+   resources:
+     requests:
+		cpu: "500m"
+		memory: "128Mi"
+   ports:
+    - containerPort: 8080
+	  name: http
+      protocol: TCP
+	  
+Capping Resource Usage with Limits:
+-----------------------------------
+* you can also set a maximum on a Pod’s resource usage via resource limits
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kuard
+spec:
+ containers:
+  - image: gcr.io/kuar-demo/kuard-amd64:1
+    name: kuard
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "128Mi"
+     limits:
+        cpu: "1000m"
+        memory: "256Mi"
+    ports:
+     - containerPort: 8080
+       name: http
+       protocol: TCP
+
+Persisting Data with Volumes:
+=============================
+
+Using Volumes with Pods:
+-----------------------
+To add a volume to a Pod manifest, there are two new stanzas to add to our configuration:
+	1) spec. volumes : 
+		This array defines all of the volumes that may be accessed by containers in the Pod manifest. It’s important to note that not all containers are required to mount all volumes defined in the Pod.
+	2) volumeMounts:
+		array in the container definition. This array defines the volumes that are mounted into a particular container, and the path where each volume should be mounted.
+		
+apiVersion: v1
+kind: Pod
+metadata:
+ name: kuard
+spec:
+ volumes:
+  - name: "kuard- data"
+    hostPath:
+    path: "/var/lib/kuard"
+ containers:
+   - image: gcr.io/kuar-demo/kuard-amd64:1
+     name: kuard
+     volumeMounts:
+       - mountPath: "/data"
+         name: "kuard- data"
+     ports:
+       - containerPort: 8080
+         name: http
+         protocol: TCP
+
+* Here is an example of using an NFS server::
+
+volumes:
+	- name: "kuard-data"
+	  nfs:
+		server: my.nfs.server.ocal
+		path: "/exports"
+###############################################################################3		
+Full Example :
+---------------
+
+apiVersion: v1
+kind: Pod
+metadata:
+ name: kuard
+spec:
+ volumes:
+   - name: "kuard- data"
+     nfs:
+      server: my. nfs. server. local
+      path: "/exports"
+ containers:
+    - image: gcr. io/kuar- demo/kuard- amd64: 1
+      name: kuard
+      ports:
+       - containerPort: 8080
+         name: http
+         protocol: TCP
+  resources:
+   requests:
+     cpu: "500m"
+     memory: "128Mi"
+   limits:
+    cpu: "1000m"
+    memory: "256Mi"
+  volumeMounts:
+    - mountPath: "/data"
+      name: "kuard- data"
+  livenessProbe:
+    httpGet:
+      path: /healthy
+      port: 8080
+    initialDelaySeconds: 5
+    timeoutSeconds: 1
+    periodSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+   httpGet:
+    path: /ready
+    port: 8080
+   initialDelaySeconds: 30
+   timeoutSeconds: 1
+   periodSeconds: 10
+   failureThreshold: 3
+
+
+

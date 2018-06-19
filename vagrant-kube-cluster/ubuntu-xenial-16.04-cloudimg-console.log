@@ -1,0 +1,112 @@
+[28306.672221] Memory cgroup out of memory: Kill process 8748 (stress) score 1959 or sacrifice child
+[28306.856255] Killed process 8748 (stress) total-vm:256748kB, anon-rss:101632kB, file-rss:340kB
+[28309.847085] Memory cgroup out of memory: Kill process 8823 (stress) score 1955 or sacrifice child
+[28310.031687] Killed process 8823 (stress) total-vm:256748kB, anon-rss:101376kB, file-rss:276kB
+[28326.996967] Memory cgroup out of memory: Kill process 8915 (stress) score 1956 or sacrifice child
+[28327.285490] Killed process 8915 (stress) total-vm:256748kB, anon-rss:101376kB, file-rss:276kB
+[28360.088543] Memory cgroup out of memory: Kill process 9048 (stress) score 1956 or sacrifice child
+[28360.236915] Killed process 9048 (stress) total-vm:256748kB, anon-rss:101372kB, file-rss:340kB
+[28413.977097] Memory cgroup out of memory: Kill process 9205 (stress) score 1955 or sacrifice child
+[28414.054244] Killed process 9205 (stress) total-vm:256748kB, anon-rss:101372kB, file-rss:276kB
+[28497.006981] Memory cgroup out of memory: Kill process 9420 (stress) score 1955 or sacrifice child
+[28497.221545] Killed process 9420 (stress) total-vm:256748kB, anon-rss:101376kB, file-rss:276kB
+[28662.091082] Memory cgroup out of memory: Kill process 9725 (stress) score 1959 or sacrifice child
+[28662.205664] Killed process 9725 (stress) total-vm:256748kB, anon-rss:101636kB, file-rss:340kB
+[28972.473901] Memory cgroup out of memory: Kill process 10234 (stress) score 1955 or sacrifice child
+[28972.654276] Killed process 10234 (stress) total-vm:256748kB, anon-rss:101372kB, file-rss:276kB
+[29284.982537] Memory cgroup out of memory: Kill process 10752 (stress) score 1956 or sacrifice child
+[29285.046846] Killed process 10752 (stress) total-vm:256748kB, anon-rss:101372kB, file-rss:340kB
+[29595.966824] Memory cgroup out of memory: Kill process 11286 (stress) score 1959 or sacrifice child
+[29596.066236] Killed process 11286 (stress) total-vm:256748kB, anon-rss:101636kB, file-rss:340kB
+[29901.067457] Memory cgroup out of memory: Kill process 11795 (stress) score 1958 or sacrifice child
+[29901.361303] Killed process 11795 (stress) total-vm:256748kB, anon-rss:101636kB, file-rss:276kB
+[30210.986658] Memory cgroup out of memory: Kill process 12312 (stress) score 1955 or sacrifice child
+[30211.016084] Killed process 12312 (stress) total-vm:256748kB, anon-rss:101376kB, file-rss:276kB
+[30518.994412] Memory cgroup out of memory: Kill process 12827 (stress) score 1955 or sacrifice child
+[30519.123727] Killed process 12827 (stress) total-vm:256748kB, anon-rss:101372kB, file-rss:276kB
+[30826.047742] Memory cgroup out of memory: Kill process 13331 (stress) score 1955 or sacrifice child
+[30826.218963] Killed process 13331 (stress) total-vm:256748kB, anon-rss:101376kB, file-rss:276kB
+[31133.236401] Memory cgroup out of memory: Kill process 13842 (stress) score 1958 or sacrifice child
+[31133.263812] Killed process 13842 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:276kB
+[31444.955882] Memory cgroup out of memory: Kill process 14367 (stress) score 1959 or sacrifice child
+[31445.059613] Killed process 14367 (stress) total-vm:256748kB, anon-rss:101636kB, file-rss:340kB
+[31755.228476] Memory cgroup out of memory: Kill process 14932 (stress) score 1958 or sacrifice child
+[31755.497407] Killed process 14932 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:276kB
+[32065.070018] Memory cgroup out of memory: Kill process 15413 (stress) score 1958 or sacrifice child
+[32065.137149] Killed process 15413 (stress) total-vm:256748kB, anon-rss:101644kB, file-rss:276kB
+[32368.984556] Memory cgroup out of memory: Kill process 15883 (stress) score 1958 or sacrifice child
+[32369.253303] Killed process 15883 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:276kB
+[32672.089245] Memory cgroup out of memory: Kill process 16370 (stress) score 1959 or sacrifice child
+[32672.344574] Killed process 16370 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:340kB
+[32976.985739] Memory cgroup out of memory: Kill process 16841 (stress) score 1958 or sacrifice child
+[32977.112965] Killed process 16841 (stress) total-vm:256748kB, anon-rss:101636kB, file-rss:276kB
+[33286.069100] Memory cgroup out of memory: Kill process 17317 (stress) score 1959 or sacrifice child
+[33286.262429] Killed process 17317 (stress) total-vm:256748kB, anon-rss:101636kB, file-rss:340kB
+[33592.993455] Memory cgroup out of memory: Kill process 17792 (stress) score 1958 or sacrifice child
+[33593.192610] Killed process 17792 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:276kB
+[33902.003502] Memory cgroup out of memory: Kill process 18280 (stress) score 1958 or sacrifice child
+[33902.209276] Killed process 18280 (stress) total-vm:256748kB, anon-rss:101644kB, file-rss:276kB
+[34211.068274] Memory cgroup out of memory: Kill process 18768 (stress) score 1955 or sacrifice child
+[34211.245423] Killed process 18768 (stress) total-vm:256748kB, anon-rss:101376kB, file-rss:276kB
+[34518.998821] Memory cgroup out of memory: Kill process 19251 (stress) score 1958 or sacrifice child
+[34519.218708] Killed process 19251 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:276kB
+[34825.003184] Memory cgroup out of memory: Kill process 19722 (stress) score 1958 or sacrifice child
+[34825.111083] Killed process 19722 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:276kB
+[35136.050191] Memory cgroup out of memory: Kill process 20208 (stress) score 1959 or sacrifice child
+[35136.072904] Killed process 20208 (stress) total-vm:256748kB, anon-rss:101636kB, file-rss:340kB
+[35448.081690] Memory cgroup out of memory: Kill process 20690 (stress) score 1958 or sacrifice child
+[35448.131153] Killed process 20690 (stress) total-vm:256748kB, anon-rss:101636kB, file-rss:276kB
+[35757.907090] Memory cgroup out of memory: Kill process 21168 (stress) score 1958 or sacrifice child
+[35758.043146] Killed process 21168 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:276kB
+[36069.994408] Memory cgroup out of memory: Kill process 21658 (stress) score 1958 or sacrifice child
+[36070.229803] Killed process 21658 (stress) total-vm:256748kB, anon-rss:101644kB, file-rss:276kB
+[36378.104100] Memory cgroup out of memory: Kill process 22156 (stress) score 1958 or sacrifice child
+[36378.326902] Killed process 22156 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:276kB
+[36681.976503] Memory cgroup out of memory: Kill process 22626 (stress) score 1958 or sacrifice child
+[36682.080061] Killed process 22626 (stress) total-vm:256748kB, anon-rss:101636kB, file-rss:276kB
+[36986.443881] Memory cgroup out of memory: Kill process 23098 (stress) score 1956 or sacrifice child
+[36986.674902] Killed process 23098 (stress) total-vm:256748kB, anon-rss:101376kB, file-rss:340kB
+[37296.326354] Memory cgroup out of memory: Kill process 23585 (stress) score 1955 or sacrifice child
+[37296.450918] Killed process 23585 (stress) total-vm:256748kB, anon-rss:101376kB, file-rss:276kB
+[37610.487063] Memory cgroup out of memory: Kill process 24080 (stress) score 1958 or sacrifice child
+[37610.651122] Killed process 24080 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:276kB
+[37913.557218] Memory cgroup out of memory: Kill process 24554 (stress) score 1956 or sacrifice child
+[37913.759340] Killed process 24554 (stress) total-vm:256748kB, anon-rss:101376kB, file-rss:340kB
+[38217.331806] Memory cgroup out of memory: Kill process 25025 (stress) score 1955 or sacrifice child
+[38217.571605] Killed process 25025 (stress) total-vm:256748kB, anon-rss:101376kB, file-rss:276kB
+[38532.308530] Memory cgroup out of memory: Kill process 25521 (stress) score 1956 or sacrifice child
+[38532.324392] Killed process 25521 (stress) total-vm:256748kB, anon-rss:101372kB, file-rss:340kB
+[38837.621307] Memory cgroup out of memory: Kill process 26012 (stress) score 1955 or sacrifice child
+[38837.793686] Killed process 26012 (stress) total-vm:256748kB, anon-rss:101380kB, file-rss:276kB
+[39150.347290] Memory cgroup out of memory: Kill process 26485 (stress) score 1958 or sacrifice child
+[39150.466614] Killed process 26485 (stress) total-vm:256748kB, anon-rss:101644kB, file-rss:276kB
+[39459.118401] Memory cgroup out of memory: Kill process 26979 (stress) score 1955 or sacrifice child
+[39459.381868] Killed process 26979 (stress) total-vm:256748kB, anon-rss:101380kB, file-rss:276kB
+[39766.230163] Memory cgroup out of memory: Kill process 27451 (stress) score 1959 or sacrifice child
+[39766.242948] Killed process 27451 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:340kB
+[40071.387152] Memory cgroup out of memory: Kill process 27928 (stress) score 1958 or sacrifice child
+[40071.440804] Killed process 27928 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:276kB
+[40388.673674] Memory cgroup out of memory: Kill process 28417 (stress) score 1956 or sacrifice child
+[40388.884495] Killed process 28417 (stress) total-vm:256748kB, anon-rss:101368kB, file-rss:340kB
+[40694.927898] Memory cgroup out of memory: Kill process 28913 (stress) score 1958 or sacrifice child
+[40695.131127] Killed process 28913 (stress) total-vm:256748kB, anon-rss:101644kB, file-rss:276kB
+[40999.035059] Memory cgroup out of memory: Kill process 29384 (stress) score 1955 or sacrifice child
+[40999.169842] Killed process 29384 (stress) total-vm:256748kB, anon-rss:101376kB, file-rss:276kB
+[41316.008927] Memory cgroup out of memory: Kill process 29861 (stress) score 1958 or sacrifice child
+[41316.237334] Killed process 29861 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:276kB
+[41345.821124] Memory cgroup out of memory: Kill process 29991 (stress) score 1958 or sacrifice child
+[41345.826518] Killed process 29991 (stress) total-vm:256748kB, anon-rss:101640kB, file-rss:276kB
+[41348.151191] Memory cgroup out of memory: Kill process 30268 (stress) score 1955 or sacrifice child
+[41348.157016] Killed process 30268 (stress) total-vm:256748kB, anon-rss:101376kB, file-rss:276kB
+[41366.579201] Memory cgroup out of memory: Kill process 30408 (stress) score 1955 or sacrifice child
+[41366.619277] Killed process 30408 (stress) total-vm:256748kB, anon-rss:101372kB, file-rss:276kB
+[41394.751200] Memory cgroup out of memory: Kill process 30501 (stress) score 1955 or sacrifice child
+[41394.755834] Killed process 30501 (stress) total-vm:256748kB, anon-rss:101376kB, file-rss:276kB
+[41422.647688] Memory cgroup out of memory: Kill process 30610 (stress) score 1959 or sacrifice child
+[41422.699435] Killed process 30610 (stress) total-vm:256748kB, anon-rss:101636kB, file-rss:340kB
+[41504.631123] Memory cgroup out of memory: Kill process 30791 (stress) score 1958 or sacrifice child
+[41504.723256] Killed process 30791 (stress) total-vm:256748kB, anon-rss:101644kB, file-rss:276kB
+[41687.705553] Memory cgroup out of memory: Kill process 31111 (stress) score 1956 or sacrifice child
+[41687.729334] Killed process 31111 (stress) total-vm:256748kB, anon-rss:101372kB, file-rss:340kB
+[42003.429753] Memory cgroup out of memory: Kill process 31608 (stress) score 1959 or sacrifice child
+[42003.456792] Killed process 31608 (stress) total-vm:256748kB, anon-rss:101636kB, file-rss:340kB

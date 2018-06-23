@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ReplicaSet
+metadata:
+ name: myfirstreplicaset
+spec:
+ replicas: 2
+ template:
+  metadata:
+   labels:
+     app: webapp
+     version: v11
+  spec:
+   containers:
+    - name: frontendpod
+      image: nginx

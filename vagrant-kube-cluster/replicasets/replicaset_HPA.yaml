@@ -1,0 +1,10 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+ name: myhpa
+spec:
+ scaleTargetRef:
+  kind: ReplicaSet
+  name: mysecondreplicaset
+ minReplicas: 3
+ maxReplicas: 5

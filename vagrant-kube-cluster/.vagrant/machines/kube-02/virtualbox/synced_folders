@@ -1,1 +1,1 @@
-{"virtualbox":{"/vagrant":{"guestpath":"/vagrant","hostpath":"/home/mo/k8s/k8s/vagrant-kube-cluster","disabled":false,"__vagrantfile":true}}}
+{"virtualbox":{"/vagrant":{"guestpath":"/vagrant","hostpath":"/home/mo/k8s/vagrant-kube-cluster","disabled":false,"__vagrantfile":true}}}

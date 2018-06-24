@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: firstdeployment
+ labels:
+  app: nginx-deployment
+spec:
+ replicas: 18
+ strategy:
+  type: Recreate
+ selector:
+  matchLabels:
+   app: dep-webapp
+ template:
+  metadata:
+   labels:
+    app: dep-webapp
+  spec:
+   containers:
+    - name: nginx-container
+      image: nginx:1.9
+      ports:
+      - containerPort: 8080
+        name: http
+        protocol: TCP

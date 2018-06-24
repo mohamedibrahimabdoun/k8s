@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: rolling-strategy-deployment
+ labels:
+  app: nginx-deployment
+spec:
+ replicas: 18
+ revisionHistoryLimit: 20
+ strategy:
+  type: RollingUpdate
+  rollingUpdate:
+   maxUnavailable: 4
+   maxSurge: 6
+ selector:
+  matchLabels:
+   app: dep-webapp
+ template:
+  metadata:
+   labels:
+    app: dep-webapp
+  spec:
+   containers:
+    - name: nginx-container
+      image: nginx:1.8
+      ports:
+      - containerPort: 8080
+        name: http
+        protocol: TCP

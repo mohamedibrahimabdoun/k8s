@@ -2,10 +2,10 @@ https://www.mirantis.com/blog/how-install-kubernetes-kubeadm/
 
 https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/calico
 
-	 kubeadm init --api-advertise-addresses 172.172.0.100
+	 kubeadm init --api-advertise-addresses 192.168.1.10
 	 ##--network-plugin=cni 
 	 
-	 kubeadm init --pod-network-cidr=192.168.0.0/24   --apiserver-advertise-address 172.172.1.10
+	 kubeadm init --pod-network-cidr=172.172.0.0/24   --apiserver-advertise-address 192.168.1.10
 	 
 	mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -20,7 +20,7 @@ export KUBECONFIG=/etc/kubernetes/admin.conf
 kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml
 
 	
-	kubeadm join 172.172.1.10:6443 --token zdnfge.m0blw3vl4s2wezs2 --discovery-token-ca-cert-hash sha256:840a8dbeb93721f4e10eed6211609e8af668cd054f7c655f8a54fb090e330790
+	kubeadm join 192.168.1.10:6443 --token w7d491.wvrwunrbn7twknwa --discovery-token-ca-cert-hash sha256:e143f767f5aa509e344d26210e9b74e6c74690634f3e3f9e129ee81d6dccdc1f	
 	
 	
 	

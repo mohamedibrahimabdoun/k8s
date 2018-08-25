@@ -1,0 +1,6 @@
+https://icicimov.github.io/blog/kubernetes/Kubernetes-cluster-step-by-step-Part5/
+https://github.com/indiketa/kubeadm-ha
+https://docs.kublr.com/installationguide/bootstrap/
+https://kubernetes.io/docs/setup/independent/high-availability/
+https://www.vultr.com/docs/installing-and-configuring-haproxy-on-ubuntu-14-04
+https://www.upcloud.com/support/haproxy-load-balancer-ubuntu/

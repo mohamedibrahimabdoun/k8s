@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: my-redis-pod
+spec:
+ containers:
+ - name: redius-example
+   image: kubernetes/redis:v1
+   env: 
+      - name : Master
+        value: "true"
+   ports:
+    - containerPort: 6379
+   resources:
+     limits:
+       cpu: "0.1"
+   volumeMounts:
+    - mountPath: /redis-master-data
+      name: data
+    - mountPath: /redis-master
+      name: config
+ volumes:
+   - name: data
+     emptyDir: {}
+   - name: config
+     configMap:
+       name: example-redis-config
+       items:
+       - key: keypair-file
+         path: redis.conf 
+    
+    
+  

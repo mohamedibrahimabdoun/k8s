@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+ name: my-daemonset01
+ labels:
+  app: logging-process-ds
+spec:
+ selector:
+  matchLabels:
+    app: logging-process
+ template:
+  metadata:
+   labels:
+    app: logging-process
+  spec:
+   containers:
+    - name: my-logging-container
+      image: k8s.gcr.io/fluentd-elasticsearch:1.20
+      resources:
+       limits:
+        memory: 200Mi
+       requests:
+        cpu: 100m
+      volumeMounts:
+       - name: varlog
+         mountPath: /var/log
+       - name: varlogcontainer
+         mountPath: /var/lib/docker/containers
+         readOnly: true
+   terminationGracePeriodSeconds: 30
+   volumes:
+    - name: varlog
+      hostPath:
+       path: /var/log
+    - name : varlogcontainer
+      hostPath:
+       path: /var/lib/docker/containers      
+

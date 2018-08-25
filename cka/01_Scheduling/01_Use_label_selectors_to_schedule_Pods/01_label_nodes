@@ -1,0 +1,5 @@
+kubectl label node kube-01 rack=first_rack
+kubectl label node kube-02 rack=first_rack
+kubectl label node kube-03 rack=second_rack
+kubectl label node kube-04 rack=second_rack
+

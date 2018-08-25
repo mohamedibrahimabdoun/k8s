@@ -1,0 +1,30 @@
+apiVersion: v1
+clusters:
+- cluster:
+    server: ""
+  name: development
+- cluster:
+    server: ""
+  name: scratch
+contexts:
+- context:
+    cluster: development
+    namespace: frontend
+    user: developer
+  name: dev-frontend
+- context:
+    cluster: ""
+    user: ""
+  name: development-context
+- context:
+    cluster: ""
+    user: ""
+  name: test-context
+current-context: ""
+kind: Config
+preferences: {}
+users:
+- name: developer
+  user: {}
+- name: tester
+  user: {}

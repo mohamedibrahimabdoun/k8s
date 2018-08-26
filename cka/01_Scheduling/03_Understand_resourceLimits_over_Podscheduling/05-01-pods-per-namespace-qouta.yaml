@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ResourceQouta
+metadata:
+ name: pods-per-namespace-resourceqouta
+ namespace: quota-pod
+spec:
+ hard:
+  pod: 2

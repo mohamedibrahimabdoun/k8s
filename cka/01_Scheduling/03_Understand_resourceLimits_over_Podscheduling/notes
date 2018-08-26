@@ -1,0 +1,3 @@
+# Configure Default Memory Requests and Limits for a Namespace :
+================================================================
+* If a Container is created in a namespace that has a default memory limit, and the Container does not specify its own memory limit, then the Container is assigned the default memory limit. 

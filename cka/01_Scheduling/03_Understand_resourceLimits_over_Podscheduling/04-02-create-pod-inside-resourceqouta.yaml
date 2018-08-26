@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod-inside-quata-namepspace
+ namespace: quota-mem-cpu
+spec:
+ containers:
+  - name: busybox
+    image: busybox
+    resources:
+     limits:
+      cpu: 1
+      memory: 512Mi

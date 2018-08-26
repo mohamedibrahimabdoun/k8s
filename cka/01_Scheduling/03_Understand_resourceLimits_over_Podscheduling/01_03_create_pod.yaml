@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod-with-default-limits
+ namespace: default-mem-example
+spec:
+ containers:
+  - name: busybox-container
+    image: busybox
+    resources:
+     limits:
+       memory: 512Mi
+     

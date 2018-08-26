@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod-livenessprobe-tcp
+spec:
+ containers:
+  - name : redis
+    image: redis
+    livenessProbe:
+     tcpSocket:
+      port: 6379
+     initialDelaySeconds: 30
+     timeoutSeconds: 1
+    ports:
+    - containerPort: 6379

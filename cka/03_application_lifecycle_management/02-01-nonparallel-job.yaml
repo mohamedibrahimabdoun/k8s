@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+ name: nonparallel-job
+spec:
+ template:
+  spec:
+   containers:
+    - name: busybox
+      image: busybox
+      command: ["touch"  , "/container-log/hi.log"]
+      volumeMounts:
+       - name : "container-log"
+         mountPath:  /container-log
+   volumes:
+     - name: "container-log"
+       hostPath:
+          path: "/var/log"
+   restartPolicy: Never

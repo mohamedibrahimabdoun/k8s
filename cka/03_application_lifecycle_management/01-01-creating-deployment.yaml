@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: my-depolyment01
+ labels:
+  app: nginx
+spec:
+  replicas: 9
+  selector:
+   matchLabels:
+    app: nginx
+  template:
+   metadata:
+    labels:
+     app : nginx
+   spec:
+    containers:
+     - name: nginx-179
+       image: nginx:1.7.9
+       ports:
+        - containerPort: 80

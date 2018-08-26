@@ -1,0 +1,43 @@
+1) kubectl set image deployment/my-depolyment01 nginx=nginx:1.9.1
+2) kubectl edit deployment/my-depolyment01
+
+
+============================================
+3) checking Rollput Status :
+===========================
+ kubectl rollout status deployment/my-depolyment01
+
+============================================================
+4)Checking Rollout History of a Deployment:
+------------------------------------------
+
+kubectl rollout history deployment/my-depolyment01
+==================================================
+5) Rolling Back to a Previous Revision:
+---------------------------------------
+kubectl rollout undo deployment/my-depolyment01
+kubectl rollout undo deployment/my-depolyment01 --to-revision=2
+
+==================================================
+Scaling a Deployment:-
+--------------------
+
+kubectl scale deployment my-depolyment01 --replicas=10
+* you can setup an autoscaler for your Deployment and choose the minimum and maximum number of Pods you want to run based on the CPU utilization of your existing Pods
+
+kubectl autoscale deployment nginx-deployment --min=10 --max=15 --cpu-percent=80
+
+ autoscaling:
+ ------------
+  kubectl run php-apache --image=k8s.gcr.io/hpa-example --requests=cpu=200m --expose --port=80
+  kubectl autoscale deployment php-apache --cpu-percent=50 --min=1 --max=10
+  kubectl get hpa
+  * Increase load:
+	1-  kubectl run -i --tty load-generator --image=busybox /bin/sh
+	    while true; do wget -q -O- http://php-apache.default.svc.cluster.local; done
+		
+	2-  kubectl run -i --tty php-apache-pod-121212  --image=busybox /bin/sh
+	    apt-get udpate
+		apt-get install stress
+		stress --cpu 4
+  

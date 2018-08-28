@@ -76,3 +76,8 @@ kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/
 Useful Bolgs :
 ---------------
 https://kukulinski.com/10-most-common-reasons-kubernetes-deployments-fail-part-1/
+
+
+###############Kubespray######################
+https://www.youtube.com/watch?v=IChpsAPq4Ko
+

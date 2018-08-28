@@ -1,0 +1,5 @@
+http://www.kubernet.io/cluster_maintenance_cka_1.9.0.html
+https://www.youtube.com/watch?v=x9doB5eJWgQ&feature=youtu.be
+https://gist.github.com/jbeda/9d14523377b53937cc531f78b9f0f021
+* https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade-1-9/
+

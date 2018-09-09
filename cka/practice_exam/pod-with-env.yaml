@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod-with-env
+ labels:
+  app: nginx
+spec:
+ containers:
+  - name : nginx
+    image: nginx
+    env: 
+     - name: MY_ENV_VAR
+       value: "hello There"
+     - name : MY_SECOND_VAR
+       value: "send Env Var"

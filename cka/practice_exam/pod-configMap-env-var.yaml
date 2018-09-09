@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name:  pod-confmap
+ namespace: default
+data:
+  connstring: "db-server"
+  maxsession: "10"
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod-configmap-env-var
+spec:
+ containers:
+  - name: nginx
+    image: nginx
+    env:
+     - name: DB_CONN_STRING
+       valueFrom:
+         configMapKeyRef:
+           name: pod-confmap
+           key: connstring
+     - name: MAX_SESSIONS
+       valueFrom:
+         configMapKeyRef:
+           name: pod-confmap
+           key: maxsession

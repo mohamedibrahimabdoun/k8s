@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod-with-command
+ labels:
+  app: nginx
+spec:
+ containers:
+  - name : nginx
+    image: nginx
+    command: ["echo" , "'Hi from container'"]
+ restartPolicy: OnFailure

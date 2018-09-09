@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod-hostfile-vol
+spec:
+ volumes:
+  - name: vol1
+    hostPath:
+     path: "/var/log"
+ containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+     - name: vol1
+       mountPath: "/logs"

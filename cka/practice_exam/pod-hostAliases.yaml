@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod-host-aliases
+spec:
+ hostAliases:
+ - ip: "127.0.0.1"
+   hostnames:
+   - "test.cluster.local"
+   - "test2.cluster.local"
+ - ip: "10.1.2.3"
+   hostnames:
+    - "db.server.com"
+ containers:
+  - name: nginx
+    image: nginx

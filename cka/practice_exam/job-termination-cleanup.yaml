@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+ name: job-termination-cleanup
+spec:
+ backoffLimit: 5   #
+ activeDeadlineSeconds: 10 #Once a Job reaches activeDeadlineSeconds, the Job and all of its Pods are terminated
+ template:
+  spec:
+   containers:
+    - name: busybox
+      image: busybox
+      command: ["touch","x"]
+   restartPolicy: Never   

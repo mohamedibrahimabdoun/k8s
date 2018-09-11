@@ -1,0 +1,12 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+ name: job-parallelism
+spec:
+ parallelism: 2
+ template:
+   spec:
+    containers:
+     - name: busybox
+       image: busybox
+    restartPolicy: OnFailure

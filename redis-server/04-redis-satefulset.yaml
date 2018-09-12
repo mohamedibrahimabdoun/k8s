@@ -1,0 +1,47 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+ name: redis-sts-cluster
+ namespace: redis
+spec:
+ serviceName: redis-service
+ replicas: 2
+ template: 
+  metadata:
+   labels:
+     app: redis
+  spec:
+     containers:
+       - name: redis-cluster
+         image: tiroshanm/kubernetes-redis-cluster:latest
+         ports: 
+          - containerPort: 6379
+            name: client-port
+          - containerPort: 16379
+            name: gossip-port
+         command: ["/usr/local/bin/redis-server"]
+         args: ["/redis-conf/redis.conf"]
+         volumeMounts:
+           - name: data
+             mountPath: /data
+             readOnly: false
+         readinessProbe:
+           initialDelaySeconds: 15
+           timeoutSeconds: 5
+           exec:
+             command:
+               - sh
+               - -c
+               - "redis-cli -h $(hostname) ping"
+         livenessProbe:
+           initialDelaySeconds: 20
+           periodSeconds: 3
+           exec:
+            command:
+              - sh
+              - -c
+              - "redis-cli -h $(hostname) ping" 
+     volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: redis-pvc 

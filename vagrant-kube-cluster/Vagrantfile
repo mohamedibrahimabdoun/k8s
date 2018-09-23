@@ -10,9 +10,10 @@ Vagrant.configure(2) do |config|
 	#config.ssh.username = 'root'
 	#config.ssh.password = 'vagrant'
 	#config.ssh.insert_key = 'true'
-    kube.vm.network "private_network", ip: "10.10.1.10"
+    kube.vm.network "private_network", ip: "192.168.1.100"
+	kube.vm.network "public_network", bridge: "Wi-Fi" , ip: "10.0.0.100" 
     config.vm.provider :virtualbox do |vb|
-       vb.customize ["modifyvm", :id, "--memory", "4048"]
+       vb.customize ["modifyvm", :id, "--memory", "3048"]
        vb.customize ["modifyvm", :id, "--cpus", "2"]
     end  
     kube.vm.provision "shell", inline: $script
@@ -23,7 +24,8 @@ Vagrant.configure(2) do |config|
 	#config.ssh.username = 'root'
 	#config.ssh.password = 'vagrant'
 	#config.ssh.insert_key = 'true'
-    kube.vm.network "private_network", ip: "10.10.1.11"
+    kube.vm.network "private_network", ip: "192.168.1.101"
+	kube.vm.network "public_network", bridge: "Wi-Fi" , ip: "10.0.0.101"
     config.vm.provider :virtualbox do |vb|
        vb.customize ["modifyvm", :id, "--memory", "2048"]
        vb.customize ["modifyvm", :id, "--cpus", "1"]
@@ -36,7 +38,8 @@ Vagrant.configure(2) do |config|
 	#config.ssh.username = 'root'
 	#config.ssh.password = 'vagrant'
 	#config.ssh.insert_key = 'true'
-    kube.vm.network "private_network", ip: "10.10.1.12"
+    kube.vm.network "private_network", ip: "192.168.1.102"
+	kube.vm.network "public_network", bridge: "Wi-Fi" , ip: "10.0.0.102"
     config.vm.provider :virtualbox do |vb|
        vb.customize ["modifyvm", :id, "--memory", "2048"]
        vb.customize ["modifyvm", :id, "--cpus", "1"]
@@ -49,7 +52,8 @@ Vagrant.configure(2) do |config|
 	#config.ssh.username = 'root'
 	#config.ssh.password = 'vagrant'
 	#config.ssh.insert_key = 'true'
-    kube.vm.network "private_network", ip: "10.10.1.13"
+    kube.vm.network "private_network", ip: "192.168.1.103"
+	kube.vm.network "public_network", bridge: "Wi-Fi" , ip: "10.0.0.103"
     config.vm.provider :virtualbox do |vb|
        vb.customize ["modifyvm", :id, "--memory", "2048"]
        vb.customize ["modifyvm", :id, "--cpus", "1"]
@@ -59,7 +63,8 @@ Vagrant.configure(2) do |config|
   
   config.vm.define "kube-04" do |kube|
    kube.vm.hostname = "kube-04" 
-   kube.vm.network "private_network", ip: "10.10.1.14"
+   kube.vm.network "private_network", ip: "192.168.1.104"
+	kube.vm.network "public_network", bridge: "Wi-Fi" , ip: "10.0.0.104"
    config.vm.provider :virtualbox do |vb|
       vb.customize ["modifyvm", :id, "--memory", "2048"]
       vb.customize ["modifyvm", :id, "--cpus", "1"]

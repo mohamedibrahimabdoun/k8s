@@ -45,9 +45,9 @@ Vagrant.configure(2) do |config|
     kube.vm.provision "shell", inline: $script
   end
   
-    config.vm.define "k8s-master03" do |kube|
-    kube.vm.hostname = "k8s-master03"
-    kube.vm.network "private_network", ip: "192.168.1.31"
+    config.vm.define "lb" do |kube|
+    kube.vm.hostname = "lb"
+    kube.vm.network "private_network", ip: "192.168.1.100"
     config.vm.provider :virtualbox do |vb|
        vb.customize ["modifyvm", :id, "--memory", "2048"]
        vb.customize ["modifyvm", :id, "--cpus", "1"]
@@ -69,14 +69,14 @@ Vagrant.configure(2) do |config|
 
 $script_master = <<SCRIPT
 echo I am provisioning master...
-sudo add-apt-repository ppa:vbernat/haproxy-1.5
+#sudo add-apt-repository ppa:vbernat/haproxy-1.5
 sudo apt-get update -y
-sudo apt-get dist-upgrade -y
+#sudo apt-get dist-upgrade -y
 #echo "r00tme" | passwd  root
-#sudo cp /vagrant/hosts /etc/hosts
-#curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-#sudo cp /vagrant/kubernetes.list /etc/apt/sources.list.d/kubernetes.list
-#sudo apt-get update 
+sudo cp /vagrant/hosts /etc/hosts
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo cp /vagrant/kubernetes.list /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update 
 #sudo apt-get install -y docker.io kubelet kubeadm kubectl kubernetes-cni
 #sudo rm -rf /var/lib/kubelet/*
 #echo I am turning off swap...

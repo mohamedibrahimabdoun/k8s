@@ -1,0 +1,30 @@
+apiVersion: kubeadm.k8s.io/v1beta1
+#kind: MasterConfiguration
+kind: ClusterConfiguration
+kubernetesVersion: v1.13.0
+api:
+ bindPort: 10443
+ advertiseAddress: "192.168.1.11"
+clusterName: myk8s
+networking:
+  dnsDomain: cluster.local
+  podSubnet: "172.17.0.0/16"
+  serviceSubnet: 10.96.0.0/12
+etcd:
+  endpoints:
+  - "http://192.168.1.11:2379"
+  - "http://192.168.1.21:2379"
+  - "http://192.168.1.31:2379"
+apiServerExtraArgs:
+  apiserver-count: "3"
+  authorization-mode: "Node,RBAC"
+apiServerCertSANs:
+- "k8s-master01"
+- "k8s-master02"
+- "k8s-master03"
+- "lb"
+- "192.168.1.11"
+- "192.168.1.21"
+- "192.168.1.31"
+- "192.168.1.100"
+- "127.0.0.1"

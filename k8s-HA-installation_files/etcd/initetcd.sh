@@ -1,12 +1,12 @@
 ETCD_VERSION=3.2
 TOKEN=my-etcd-token
 CLUSTER_STATE=new
-NAME_1=k8s-master01
-NAME_2=k8s-master02
-NAME_3=k8s-master03
-HOST_1=192.168.1.11
-HOST_2=192.168.1.21
-HOST_3=192.168.1.31
+NAME_1=k8s-master01.myk8sdomain.com
+NAME_2=k8s-master02.myk8sdomain.com
+NAME_3=k8s-master03.myk8sdomain.com
+HOST_1=10.10.1.21
+HOST_2=10.10.1.22
+HOST_3=10.10.1.23
 CLUSTER=${NAME_1}=http://${HOST_1}:2380,${NAME_2}=http://${HOST_2}:2380,${NAME_3}=http://${HOST_3}:2380
 DATA_DIR=/var/lib/etcd
 

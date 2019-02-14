@@ -9,7 +9,7 @@ bootstrapTokens:
   - authentication
 kind: InitConfiguration
 localAPIEndpoint:
-  advertiseAddress: 192.168.1.11
+  advertiseAddress: 10.10.1.21
   bindPort: 6443
 nodeRegistration:
   criSocket: /var/run/dockershim.sock
@@ -27,37 +27,40 @@ apiServer:
     - "k8s-master01.myk8sdomain.com"
     - "k8s-master02.myk8sdomain.com"
     - "k8s-master03.myk8sdomain.com"
+    - "kube-01"
+    - "kube-02"
     - "lb"
     - "lb.myk8sdomain.com"
-    - "192.168.1.11"
-    - "192.168.1.21"
-    - "192.168.1.31"
-    - "192.168.1.100"
+    - "10.10.1.21"
+    - "10.10.1.22"
+    - "10.10.1.23"
+    - "10.10.1.120"
     - "127.0.0.1"
   extraArgs:
-    advertise-address: 192.168.1.11
+    advertise-address: 10.10.1.21
     enable-admission-plugins: AlwaysPullImages,DefaultStorageClass
+    apiserver-count: "3"
 apiVersion: kubeadm.k8s.io/v1beta1
 certificatesDir: /etc/kubernetes/pki
 clusterName: kubernetes
 #controlPlaneEndpoint: "lb:6443"
 controllerManager: 
   extraArgs:
-    bind-address: 192.168.1.11
+    bind-address: 10.10.1.21
 dns:
   type: CoreDNS
 etcd:
  external:
   endpoints:
-    - "http://192.168.1.11:2379"
-    - "http://192.168.1.21:2379"
-    - "http://192.168.1.31:2379"
+    - "http://10.10.1.21:2379"
+    - "http://10.10.1.22:2379"
+    - "http://10.10.1.23:2379"
 imageRepository: k8s.gcr.io
 kind: ClusterConfiguration
 kubernetesVersion: v1.13.0
 networking:
   dnsDomain: cluster.local
-  podSubnet: "172.17.0.0/16"
+  podSubnet: "192.168.0.0/16"
   serviceSubnet: 10.96.0.0/12
 scheduler: 
-  address: 192.168.1.11
+  address: 10.10.1.21

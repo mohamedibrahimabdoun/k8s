@@ -1,3 +1,4 @@
+
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
@@ -6,8 +7,8 @@ Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/xenial64"
 
   config.vm.define "k8s-master01" do |kube|
-    kube.vm.hostname = "k8s-master01"
-    kube.vm.network "private_network", ip: "192.168.1.11"
+    kube.vm.hostname = "k8s-master01.myk8sdomain.com"
+    kube.vm.network "private_network", ip: "10.10.1.21"
     config.vm.provider :virtualbox do |vb|
        vb.customize ["modifyvm", :id, "--memory", "2048"]
        vb.customize ["modifyvm", :id, "--cpus", "1"]
@@ -16,8 +17,8 @@ Vagrant.configure(2) do |config|
   end
  
  config.vm.define "kube-01" do |kube|
-    kube.vm.hostname = "kube-01"
-    kube.vm.network "private_network", ip: "192.168.1.12"
+    kube.vm.hostname = "kube-01.myk8sdomain.com"
+    kube.vm.network "private_network", ip: "10.10.1.31"
     config.vm.provider :virtualbox do |vb|
        vb.customize ["modifyvm", :id, "--memory", "2048"]
        vb.customize ["modifyvm", :id, "--cpus", "1"]
@@ -26,8 +27,8 @@ Vagrant.configure(2) do |config|
   end
   
     config.vm.define "k8s-master02" do |kube|
-    kube.vm.hostname = "k8s-master02"
-    kube.vm.network "private_network", ip: "192.168.1.21"
+    kube.vm.hostname = "k8s-master02.myk8sdomain.com"
+    kube.vm.network "private_network", ip: "10.10.1.22"
     config.vm.provider :virtualbox do |vb|
        vb.customize ["modifyvm", :id, "--memory", "2048"]
        vb.customize ["modifyvm", :id, "--cpus", "1"]
@@ -36,8 +37,8 @@ Vagrant.configure(2) do |config|
   end
 
  config.vm.define "kube-02" do |kube|
-    kube.vm.hostname = "kube-02"
-    kube.vm.network "private_network", ip: "192.168.1.22"
+    kube.vm.hostname = "kube-02.myk8sdomain.com"
+    kube.vm.network "private_network", ip: "10.10.1.32"
     config.vm.provider :virtualbox do |vb|
        vb.customize ["modifyvm", :id, "--memory", "2048"]
        vb.customize ["modifyvm", :id, "--cpus", "1"]
@@ -45,26 +46,36 @@ Vagrant.configure(2) do |config|
     kube.vm.provision "shell", inline: $script
   end
   
-    config.vm.define "lb" do |kube|
-    kube.vm.hostname = "lb"
-    kube.vm.network "private_network", ip: "192.168.1.100"
+     config.vm.define "k8s-master03" do |kube|
+    kube.vm.hostname = "k8s-master03.myk8sdomain.com"
+    kube.vm.network "private_network", ip: "10.10.1.23"
     config.vm.provider :virtualbox do |vb|
        vb.customize ["modifyvm", :id, "--memory", "2048"]
        vb.customize ["modifyvm", :id, "--cpus", "1"]
     end  
     kube.vm.provision "shell", inline: $script_master
   end
- 
- 
-   config.vm.define "kube-03" do |kube|
-    kube.vm.hostname = "kube-03"
-    kube.vm.network "private_network", ip: "192.168.1.32"
-    config.vm.provider :virtualbox do |vb|
-       vb.customize ["modifyvm", :id, "--memory", "2048"]
-       vb.customize ["modifyvm", :id, "--cpus", "1"]
-    end
-    kube.vm.provision "shell", inline: $script
-  end
+  
+#    config.vm.define "lb" do |kube|
+#    kube.vm.hostname = "lb"
+#    kube.vm.network "private_network", ip: "10.10.1.100"
+#    config.vm.provider :virtualbox do |vb|
+#       vb.customize ["modifyvm", :id, "--memory", "2048"]
+#       vb.customize ["modifyvm", :id, "--cpus", "1"]
+#    end  
+#    kube.vm.provision "shell", inline: $script_master
+#  end
+# 
+# 
+#   config.vm.define "kube-03" do |kube|
+#    kube.vm.hostname = "kube-03"
+#    kube.vm.network "private_network", ip: "10.10.1.32"
+#    config.vm.provider :virtualbox do |vb|
+#       vb.customize ["modifyvm", :id, "--memory", "2048"]
+#       vb.customize ["modifyvm", :id, "--cpus", "1"]
+#    end
+#    kube.vm.provision "shell", inline: $script
+#  end
   
 
 $script_master = <<SCRIPT
@@ -76,18 +87,62 @@ sudo apt-get update -y
 sudo cp /vagrant/hosts /etc/hosts
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
 sudo cp /vagrant/kubernetes.list /etc/apt/sources.list.d/kubernetes.list
+
+sudo echo "http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && apk --update -t add keepalived iproute2 grep bash tcpdump sed perl && rm -f /var/cache/apk/* /tmp/*
 sudo apt-get update 
-#sudo apt-get install -y docker.io kubelet kubeadm kubectl kubernetes-cni
-#sudo rm -rf /var/lib/kubelet/*
-#echo I am turning off swap...
-#sudo swapoff -a
+sudo apt-get install -y docker.io kubelet kubeadm kubectl kubernetes-cni git keepalived iproute2 grep bash tcpdump sed perl
+sudo rm -rf /var/lib/kubelet/*
+echo I am turning off swap...
+sudo swapoff -a
+sudo su
+git clone  https://github.com/mohamedibrahimabdoun/k8s.git
+sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
+systemctl restart ssh
 #echo I am joining NFS...
 #sudo apt-get install nfs-common -y
+
+echo "###########Setting Elastic Search Parameters###############"
+sudo su -
+apt-get install -y  vim net-tools java-1.8.0-openjdk
+echo "elastic - nofile 65536" >>  /etc/security/limits.conf
+echo  "vm.max_map_count=262144" >> /etc/sysctl.conf
+sysctl -p
+useradd -m elastic
+su - elastic
+cd /home/elastic/
+curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.5.0.tar.gz
 
 SCRIPT
 
 
 $script = <<SCRIPT
 echo I am provisioning slaves...
+sudo apt-get update -y
+sudo cp /vagrant/hosts /etc/hosts
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo cp /vagrant/kubernetes.list /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update 
+sudo apt-get install -y docker.io kubelet kubeadm kubectl kubernetes-cni
+sudo su
+swapoff -a
+git clone  https://github.com/mohamedibrahimabdoun/k8s.git
+sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
+systemctl restart ssh
+
+echo "###########Setting Elastic Search Parameters###############"
+sudo su -
+apt-get install -y  vim net-tools java-1.8.0-openjdk
+echo "elastic - nofile 65536" >>  /etc/security/limits.conf
+echo  "vm.max_map_count=262144" >> /etc/sysctl.conf
+sysctl -p
+useradd -m elastic
+su - elastic
+cd /home/elastic/
+curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.5.0.tar.gz
+
+
 SCRIPT
 end
+

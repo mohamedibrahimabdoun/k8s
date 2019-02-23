@@ -35,13 +35,13 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: DISCOVERY_SERVICE
+        - name: discovery.zen.ping.unicast.hosts
           value: elasticsearch-discovery
-        - name: NODE_NAME
+        - name: node.name
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-        - name: CLUSTER_NAME
+        - name: cluster.name
           value: elasticsearch
         - name: NODE_DATA
           value: "true"

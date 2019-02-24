@@ -4,18 +4,19 @@ metadata:
   name: elasticsearch-data
   namespace: elk-namespace
   labels:
-    app: elasticsearch-data
+    app: es-node
     env: dev
+    nodetype: elasticsearch-node
 spec:
-  serviceName: elasticsearch-data
+  serviceName: es-discovery
   replicas: 2 # scale when desired
   selector:
     matchLabels:
-      app: elasticsearch-data
+      app: es-node
   template:
     metadata:
       labels:
-        app: elasticsearch-data
+        app: es-node
     spec:
       initContainers:
       - name: init-sysctl
@@ -36,18 +37,19 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         - name: discovery.zen.ping.unicast.hosts
-          value: elasticsearch-discovery
+          #value: "elasticsearch-sticsearch-data-0.elasticsearch-discovery.elk-namespace.svc.cluster.local,elasticsearch-sticsearch-data-1.elasticsearch-discovery.elk-namespace.svc.cluster.local"
+          value: "es-discovery.elk-namespace.svc.cluster.local"
         - name: node.name
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
         - name: cluster.name
           value: elasticsearch
-        - name: NODE_DATA
+        - name: node.data
           value: "true"
-        - name: NODE_MASTER
+        - name: node.master
           value: "false"
-        - name: NODE_INGEST
+        - name: node.ingest
           value: "false"
         - name: HTTP_ENABLE
           value: "false"
@@ -63,6 +65,8 @@ spec:
         ports:
         - containerPort: 9300
           name: transport
+        - containerPort: 9200
+          name: http
         volumeMounts:
         - name: elasticsearch-data-storage
           mountPath: /data

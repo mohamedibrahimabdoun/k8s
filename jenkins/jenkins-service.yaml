@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins
+spec:
+  type: LoadBalancer
+  ports:
+   - port: 8080
+     name: p8080
+     targetPort: 8080
+   - port : 50000
+     name: p5000
+     targetPort: 50000
+  selector:
+    app: jenkins

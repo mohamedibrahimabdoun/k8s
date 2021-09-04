@@ -1,0 +1,83 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "ubuntu/xenial64"
+
+  config.vm.define "k8s-master" do |kube|
+    kube.vm.hostname = "k8s-master"
+	#config.ssh.username = 'root'
+	#config.ssh.password = 'vagrant'
+	#config.ssh.insert_key = 'true'
+    kube.vm.network "private_network", ip: "10.10.1.100"
+	#kube.vm.network "public_network", bridge: "Wi-Fi" , ip: "10.0.0.100" 
+    config.vm.provider :virtualbox do |vb|
+       vb.customize ["modifyvm", :id, "--memory", "3048"]
+       vb.customize ["modifyvm", :id, "--cpus", "2"]
+    end  
+    kube.vm.provision "shell", inline: $script
+  end
+ 
+ config.vm.define "kube-01" do |kube|
+    kube.vm.hostname = "kube-01"
+	#config.ssh.username = 'root'
+	#config.ssh.password = 'vagrant'
+	#config.ssh.insert_key = 'true'
+    kube.vm.network "private_network", ip: "10.10.1.101"
+	#kube.vm.network "public_network", bridge: "Wi-Fi" , ip: "10.0.0.101"
+    config.vm.provider :virtualbox do |vb|
+       vb.customize ["modifyvm", :id, "--memory", "2048"]
+       vb.customize ["modifyvm", :id, "--cpus", "1"]
+    end
+    kube.vm.provision "shell", inline: $script
+  end
+
+ config.vm.define "kube-02" do |kube|
+    kube.vm.hostname = "kube-02"
+	#config.ssh.username = 'root'
+	#config.ssh.password = 'vagrant'
+	#config.ssh.insert_key = 'true'
+    kube.vm.network "private_network", ip: "10.10.1.102"
+	#kube.vm.network "public_network", bridge: "Wi-Fi" , ip: "10.0.0.102"
+    config.vm.provider :virtualbox do |vb|
+       vb.customize ["modifyvm", :id, "--memory", "2048"]
+       vb.customize ["modifyvm", :id, "--cpus", "1"]
+    end
+    kube.vm.provision "shell", inline: $script
+  end
+  
+   config.vm.define "kube-03" do |kube|
+    kube.vm.hostname = "kube-03"
+	#config.ssh.username = 'root'
+	#config.ssh.password = 'vagrant'
+	#config.ssh.insert_key = 'true'
+    kube.vm.network "private_network", ip: "10.10.1.103"
+	#kube.vm.network "public_network", bridge: "Wi-Fi" , ip: "10.0.0.103"
+    config.vm.provider :virtualbox do |vb|
+       vb.customize ["modifyvm", :id, "--memory", "2048"]
+       vb.customize ["modifyvm", :id, "--cpus", "1"]
+    end
+    kube.vm.provision "shell", inline: $script
+  end
+  
+
+
+
+$script = <<SCRIPT
+echo I am provisioning...
+#echo "r00tme" | passwd  root
+sudo cp /vagrant/hosts /etc/hosts
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo cp /vagrant/kubernetes.list /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update 
+sudo apt-get install -y docker.io kubelet kubeadm kubectl kubernetes-cni
+sudo rm -rf /var/lib/kubelet/*
+echo I am turning off swap...
+sudo swapoff -a
+echo I am joining NFS...
+sudo apt-get install nfs-common -y
+
+SCRIPT
+
+end

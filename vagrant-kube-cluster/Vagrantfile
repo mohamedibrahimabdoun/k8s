@@ -83,6 +83,12 @@ sudo chmod 600 /home/vagrant/install_master.sh
 sudo sh /home/vagrant/install_master.sh
 echo I am joining NFS...
 sudo apt-get install nfs-common -y 
+echo installing golang
+apt install golang -y
+echo "GOPATH=$HOME/golang" >> ~/.bashrc
+echo "export GOPATH" >> ~/.bashrc
+echo "PATH=\$PATH:\$GOPATH/bin # Add GOPATH/bin to PATH for scripting" >> ~/.bashrc
+source ~/.bashrc
 
 SCRIPT
 

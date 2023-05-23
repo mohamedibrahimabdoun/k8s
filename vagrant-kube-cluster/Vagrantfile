@@ -5,53 +5,48 @@ Vagrant.configure(2) do |config|
 
   config.vm.box = "bento/ubuntu-18.04"
 
-  config.vm.define "k8smaster" do |kube|
-    kube.vm.hostname = "k8smaster"
-    #config.vm.provision "file", source: "/Users/mohamed/cloud_development/k8s/vagrant-kube-cluster/hosts_vmware", destination: "/etc/hosts"
-    #config.vm.provision "file", source: "/Users/mohamed/cloud_development/k8s/vagrant-kube-cluster/kubernetes.list", destination: "/etc/apt/sources.list.d/kubernetes.list"
-    kube.vm.synced_folder ".", "/vagrant"
-    kube.vm.network "private_network", ip: "172.16.25.100"
-    kube.vm.provision "file", source: "./ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
-    #public_key = File.read("/vagrant/ssh/id_rsa.pub")
-   config.vm.provider "vmware_desktop" do |vmware|   
-      vmware.allowlist_verified = true
-      vmware.gui = true
-      vmware.vmx["memsize"] = "8024"
-      vmware.vmx["numvcpus"] = "2"
-   end
+  config.vm.define "k8s-master" do |kube|
+    kube.vm.hostname = "k8s-master"
+	#config.ssh.username = 'root'
+	#config.ssh.password = 'vagrant'
+	#config.ssh.insert_key = 'true'
+    kube.vm.network "private_network", ip: "192.168.56.100"
+	#kube.vm.network "public_network", bridge: "Wi-Fi" , ip: "10.0.0.100" 
+    config.vm.provider :virtualbox do |vb|
+       vb.customize ["modifyvm", :id, "--memory", "4048"]
+       vb.customize ["modifyvm", :id, "--cpus", "2"]
+    end  
     kube.vm.provision "shell", inline: $master_script
   end
  
-config.vm.define "kube01" do |kube|
-   kube.vm.hostname = "kube01"
-   kube.vm.synced_folder ".", "/vagrant"
-   kube.vm.network "private_network", ip: "172.16.25.101"
-   #public_key = File.read("/vagrant/ssh/id_rsa.pub")
-   kube.vm.provision "file", source: "./ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
-   config.vm.provider "vmware_desktop" do |vmware|   
-     vmware.allowlist_verified = true
-     vmware.gui = true 
-     vmware.vmx["memsize"] = "4024"
-    vmware.vmx["numvcpus"] = "2" 
+ config.vm.define "kube-01" do |kube|
+    kube.vm.hostname = "kube-01"
+	#config.ssh.username = 'root'
+	#config.ssh.password = 'vagrant'
+	#config.ssh.insert_key = 'true'
+    kube.vm.network "private_network", ip: "192.168.56.101"
+	#kube.vm.network "public_network", bridge: "Wi-Fi" , ip: "10.0.0.101"
+    config.vm.provider :virtualbox do |vb|
+       vb.customize ["modifyvm", :id, "--memory", "4048"]
+       vb.customize ["modifyvm", :id, "--cpus", "2"]
+    end
+    kube.vm.provision "shell", inline: $worker_script
   end
-   kube.vm.provision "shell", inline: $worker_script
- end
 
-config.vm.define "kube02" do |kube|
-   kube.vm.hostname = "kube02"
-   kube.vm.synced_folder ".", "/vagrant"
-   kube.vm.network "private_network", ip: "172.16.25.102"
-   #public_key = File.read("/vagrant/ssh/id_rsa.pub")
-   kube.vm.provision "file", source: "./ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
-   config.vm.provider "vmware_desktop" do |vmware|   
-     vmware.allowlist_verified = true
-     vmware.gui = true
-     vmware.vmx["memsize"] = "4024"
-      vmware.vmx["numvcpus"] = "2"  
-   end
-   kube.vm.provision "shell", inline: $worker_script
- end
-
+ config.vm.define "kube-02" do |kube|
+    kube.vm.hostname = "kube-02"
+	#config.ssh.username = 'root'
+	#config.ssh.password = 'vagrant'
+	#config.ssh.insert_key = 'true'
+    kube.vm.network "private_network", ip: "192.168.56.102"
+	#kube.vm.network "public_network", bridge: "Wi-Fi" , ip: "10.0.0.102"
+    config.vm.provider :virtualbox do |vb|
+       vb.customize ["modifyvm", :id, "--memory", "4048"]
+       vb.customize ["modifyvm", :id, "--cpus", "2"]
+    end
+    kube.vm.provision "shell", inline: $worker_script
+  end
+  
 
 
 $master_script = <<SCRIPT

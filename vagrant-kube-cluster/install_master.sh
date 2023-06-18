@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Source: http://kubernetes.io/docs/getting-started-guides/kubeadm/
+set -xe
 
 ### setup terminal
 apt-get install -y bash-completion binutils
@@ -16,18 +17,23 @@ sed -i '1s/^/force_color_prompt=yes\n/' ~/.bashrc
 
 
 ### install k8s and docker
-apt-get remove -y docker.io kubelet kubeadm kubectl kubernetes-cni
-apt-get autoremove -y
-apt-get install -y etcd-client vim build-essential
+
 
 systemctl daemon-reload
 curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
 deb http://apt.kubernetes.io/ kubernetes-xenial main
 EOF
-KUBE_VERSION=1.20.6
-apt-get update
-apt-get install -y docker.io kubelet=${KUBE_VERSION}-00 kubeadm=${KUBE_VERSION}-00 kubectl=${KUBE_VERSION}-00 kubernetes-cni=0.8.7-00
+
+#apt-get remove -y docker.io kubelet kubeadm kubectl kubernetes-cni
+#apt-get autoremove -y
+apt-get update --fix-missing
+apt-get install -y etcd-client vim build-essential
+
+
+KUBE_VERSION=1.25.10
+apt-get update -y
+apt-get install -y docker.io kubelet=${KUBE_VERSION}-00 kubeadm=${KUBE_VERSION}-00 kubectl=${KUBE_VERSION}-00 #kubernetes-cni=0.8.7-00
 
 cat > /etc/docker/daemon.json <<EOF
 {
@@ -49,17 +55,24 @@ docker info | grep -i "storage"
 docker info | grep -i "cgroup"
 
 systemctl enable kubelet && systemctl start kubelet
+## pre req
+swapoff -a
+sudo sysctl net.ipv4.conf.all.forwarding=1
+echo "net.ipv4.conf.all.forwarding=1" | sudo tee -a /etc/sysctl.conf
 
 
 ### init k8s
-rm /root/.kube/config
+#rm /root/.kube/config
+
 kubeadm reset -f
 kubeadm init --kubernetes-version=${KUBE_VERSION} --ignore-preflight-errors=NumCPU --skip-token-print --apiserver-advertise-address 172.16.25.100
 
 mkdir -p ~/.kube
 sudo cp -i /etc/kubernetes/admin.conf ~/.kube/config
 
-kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+# disabled for istio lab 
+#kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s-1.11.yaml
 
 echo "### setting the kubeconfig on vagrant home  ###"
 sudo mkdir -p /home/vagrant/.kube

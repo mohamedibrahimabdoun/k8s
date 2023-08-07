@@ -16,7 +16,7 @@ if [ "$DISTRIB_RELEASE" != "20.04" ]; then
     read
 fi
 
-KUBE_VERSION=1.26.1
+KUBE_VERSION=1.25.11
 
 
 ### setup terminal
@@ -181,3 +181,6 @@ rm -rf ${ETCDCTL_VERSION_FULL} ${ETCDCTL_VERSION_FULL}.tar.gz
 echo
 echo "### COMMAND TO ADD A WORKER NODE ###"
 kubeadm token create --print-join-command --ttl 0
+
+echo '###Installing Helm'
+sudo curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash

@@ -13,7 +13,7 @@ Vagrant.configure(2) do |config|
    config.vm.provider "vmware_fusion" do |vmware|   
       vmware.allowlist_verified = true
 #      vmware.nat_device="vmnet2"
-      vmware.gui = true
+#      vmware.gui = true
       vmware.vmx["memsize"] = "4024"
       vmware.vmx["numvcpus"] = "2"
    end
@@ -29,7 +29,7 @@ Vagrant.configure(2) do |config|
    config.vm.provider "vmware_fusion" do |vmware|   
       vmware.allowlist_verified = true
 #      vmware.nat_device="vmnet2"
-      vmware.gui = true
+#      vmware.gui = true
       vmware.vmx["memsize"] = "4024"
       vmware.vmx["numvcpus"] = "2"
    end
@@ -44,7 +44,7 @@ Vagrant.configure(2) do |config|
    config.vm.provider "vmware_fusion" do |vmware|   
       vmware.allowlist_verified = true
 #      vmware.nat_device="vmnet2"
-      vmware.gui = true
+#      vmware.gui = true
       vmware.vmx["memsize"] = "4024"
       vmware.vmx["numvcpus"] = "2"
    end
@@ -75,10 +75,10 @@ echo I am turning off swap...
 sudo echo "vm.swappiness=10" >> /etc/sysctl.conf
 sudo sysctl --system
 sudo swapoff -a
-echo copying install_master_1_26.sh
-sudo cp /vagrant/install_master_1_26.sh  /home/vagrant/install_master_1_26.sh
-sudo chmod 600 /home/vagrant/install_master_1_26.sh
-sudo sh /home/vagrant/install_master_1_26.sh
+echo copying install_master_1_25.sh
+sudo cp /vagrant/install_master_1_25.sh  /home/vagrant/install_master_1_25.sh
+sudo chmod 600 /home/vagrant/install_master_1_25.sh
+sudo sh /home/vagrant/install_master_1_25.sh
 echo I am joining NFS...
 sudo apt-get install nfs-common -y 
 #echo installing golang
@@ -115,10 +115,10 @@ echo I am turning off swap...
 sudo echo "vm.swappiness=10" >> /etc/sysctl.conf
 sudo sysctl --system
 sudo swapoff -a
-echo copying install_worker_1_26.sh
-sudo cp /vagrant/install_worker_1.26.sh /home/vagrant/install_worker_1.26.sh
-sudo chmod 700 /home/vagrant/install_worker_1.26.sh
-sudo sh /home/vagrant/install_worker_1.26.sh
+echo copying install_worker_1_25.sh
+sudo cp /vagrant/install_worker_1.25.sh /home/vagrant/install_worker_1.25.sh
+sudo chmod 700 /home/vagrant/install_worker_1.25.sh
+sudo sh /home/vagrant/install_worker_1.25.sh
 echo I am joining NFS...
 sudo apt-get install nfs-common -y
 echo $(id)

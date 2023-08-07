@@ -143,7 +143,7 @@ roleRef:
   kind: Role
   name: leader-election
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   namespace: metallb-system
@@ -170,7 +170,7 @@ spec:
       hostNetwork: true
       containers:
       - name: speaker
-        image: metallb/speaker:v0.7.3
+        image: quay.io/metallb/speaker:v0.13.7
         imagePullPolicy: IfNotPresent
         args:
         - --port=7472
@@ -196,7 +196,7 @@ spec:
             add:
             - net_raw
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: metallb-system
@@ -226,7 +226,7 @@ spec:
         runAsUser: 65534 # nobody
       containers:
       - name: controller
-        image: metallb/controller:v0.7.3
+        image: quay.io/metallb/controller:v0.13.7
         imagePullPolicy: IfNotPresent
         args:
         - --port=7472

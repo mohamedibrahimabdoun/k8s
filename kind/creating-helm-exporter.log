@@ -1,0 +1,8 @@
+Create a new Go module:
+----------------------
+mkdir helm-exporter
+cd helm-exporter
+go mod init helm-exporter
+
+Add dependencies:
+----------------

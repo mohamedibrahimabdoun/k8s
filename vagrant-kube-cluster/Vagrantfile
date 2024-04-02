@@ -10,7 +10,7 @@ Vagrant.configure(2) do |config|
     #config.vm.provision "file", source: "/Users/mohamed/cloud_development/k8s/vagrant-kube-cluster/hosts_vmware", destination: "/etc/hosts"
     #config.vm.provision "file", source: "/Users/mohamed/cloud_development/k8s/vagrant-kube-cluster/kubernetes.list", destination: "/etc/apt/sources.list.d/kubernetes.list"
     kube.vm.synced_folder ".", "/vagrant"
-    kube.vm.network "private_network", ip: "172.16.25.100"
+    kube.vm.network "private_network", ip: "172.16.206.100"
     kube.vm.provision "file", source: "./ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
     #public_key = File.read("/vagrant/ssh/id_rsa.pub")
    config.vm.provider "vmware_desktop" do |vmware|   
@@ -25,7 +25,7 @@ Vagrant.configure(2) do |config|
 config.vm.define "kube01" do |kube|
    kube.vm.hostname = "kube01"
    kube.vm.synced_folder ".", "/vagrant"
-   kube.vm.network "private_network", ip: "172.16.25.101"
+   kube.vm.network "private_network", ip: "172.16.206.101"
    #public_key = File.read("/vagrant/ssh/id_rsa.pub")
    kube.vm.provision "file", source: "./ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
    config.vm.provider "vmware_desktop" do |vmware|   
@@ -40,7 +40,7 @@ config.vm.define "kube01" do |kube|
 config.vm.define "kube02" do |kube|
    kube.vm.hostname = "kube02"
    kube.vm.synced_folder ".", "/vagrant"
-   kube.vm.network "private_network", ip: "172.16.25.102"
+   kube.vm.network "private_network", ip: "172.16.206.102"
    #public_key = File.read("/vagrant/ssh/id_rsa.pub")
    kube.vm.provision "file", source: "./ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
    config.vm.provider "vmware_desktop" do |vmware|   

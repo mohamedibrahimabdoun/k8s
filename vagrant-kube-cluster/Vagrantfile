@@ -1,96 +1,45 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-Vagrant.configure(2) do |config|
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
 
-  config.vm.box = "bento/ubuntu-18.04"
-
-  config.vm.define "k8smaster" do |kube|
-    kube.vm.hostname = "k8smaster"
-    #config.vm.provision "file", source: "/Users/mohamed/cloud_development/k8s/vagrant-kube-cluster/hosts_vmware", destination: "/etc/hosts"
-    #config.vm.provision "file", source: "/Users/mohamed/cloud_development/k8s/vagrant-kube-cluster/kubernetes.list", destination: "/etc/apt/sources.list.d/kubernetes.list"
+  config.vm.define "k8s-master" do |kube|
+    kube.vm.hostname = "k8s-master"
     kube.vm.synced_folder ".", "/vagrant"
-    kube.vm.network "private_network", ip: "172.16.206.100"
-    kube.vm.provision "file", source: "./ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
-    #public_key = File.read("/vagrant/ssh/id_rsa.pub")
-   config.vm.provider "vmware_desktop" do |vmware|   
-      vmware.allowlist_verified = true
-      vmware.gui = true
-      vmware.vmx["memsize"] = "8024"
-      vmware.vmx["numvcpus"] = "2"
-   end
-    kube.vm.provision "shell", inline: $master_script
+    kube.vm.network "private_network", ip: "192.168.56.10" # Adjusted IP within allowed range
+    kube.vm.network "public_network", type: "dhcp"  # NAT via DHCP (default NAT)
+    config.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--memory", "3048"]
+      vb.customize ["modifyvm", :id, "--cpus", "2"]
+    end  
+    kube.vm.provision "shell", inline: $script
   end
  
-config.vm.define "kube01" do |kube|
-   kube.vm.hostname = "kube01"
-   kube.vm.synced_folder ".", "/vagrant"
-   kube.vm.network "private_network", ip: "172.16.206.101"
-   #public_key = File.read("/vagrant/ssh/id_rsa.pub")
-   kube.vm.provision "file", source: "./ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
-   config.vm.provider "vmware_desktop" do |vmware|   
-     vmware.allowlist_verified = true
-     vmware.gui = true 
-     vmware.vmx["memsize"] = "4024"
-    vmware.vmx["numvcpus"] = "2" 
+  config.vm.define "kube-01" do |kube|
+    kube.vm.hostname = "kube-01"
+    kube.vm.synced_folder ".", "/vagrant"
+    kube.vm.network "private_network", ip: "192.168.56.11" # Adjusted IP within allowed range
+    kube.vm.network "public_network", type: "dhcp"  # NAT via DHCP
+    config.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--memory", "2048"]
+      vb.customize ["modifyvm", :id, "--cpus", "1"]
+    end
+    kube.vm.provision "shell", inline: $worker_script
   end
-   kube.vm.provision "shell", inline: $worker_script
- end
 
-config.vm.define "kube02" do |kube|
-   kube.vm.hostname = "kube02"
-   kube.vm.synced_folder ".", "/vagrant"
-   kube.vm.network "private_network", ip: "172.16.206.102"
-   #public_key = File.read("/vagrant/ssh/id_rsa.pub")
-   kube.vm.provision "file", source: "./ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
-   config.vm.provider "vmware_desktop" do |vmware|   
-     vmware.allowlist_verified = true
-     vmware.gui = true
-     vmware.vmx["memsize"] = "4024"
-      vmware.vmx["numvcpus"] = "2"  
-   end
-   kube.vm.provision "shell", inline: $worker_script
- end
+  config.vm.define "kube-02" do |kube|
+    kube.vm.hostname = "kube-02"
+    kube.vm.synced_folder ".", "/vagrant"
+    kube.vm.network "private_network", ip: "192.168.56.12" # Adjusted IP within allowed range
+    kube.vm.network "public_network", type: "dhcp"  # NAT via DHCP
+    config.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--memory", "2048"]
+      vb.customize ["modifyvm", :id, "--cpus", "1"]
+    end
+    kube.vm.provision "shell", inline: $worker_script
+  end
 
-
-
-$master_script = <<SCRIPT
-echo I am provisioning...
-echo setting ssh key and configs
-mkdir -p /home/vagrant/.ssh
-chmod 700 /home/vagrant/.ssh
-cat /vagrant/ssh/id_rsa.pub >> /home/vagrant/.ssh/authorized_keys
-sudo mkdir -p /root/.ssh && chmod 700 -R /root/.ssh && touch /root/.ssh/authorized_keys
-sudo cat /vagrant/ssh/id_rsa.pub > /root/.ssh/authorized_keys
-chmod -R 600 /home/vagrant/.ssh/authorized_keys
-echo 'StrictHostKeyChecking no' >> /home/vagrant/.ssh/config
-echo 'UserKnownHostsFile /dev/null' >> /home/vagrant/.ssh/config
- chmod -R 600 /home/vagrant/.ssh/config
-sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
-sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
-systemctl restart ssh
-echo "####Setting root passowrd"
-echo -e -n "r00tr00t\nr00tr00t" | sudo passwd root
-sudo cp /vagrant/hosts_vmware /etc/hosts
-echo I am turning off swap...
-sudo echo "vm.swappiness=10" >> /etc/sysctl.conf
-sudo sysctl --system
-sudo swapoff -a
-echo copying install_master.sh
-sudo cp /vagrant/install_master.sh  /home/vagrant/install_master.sh
-sudo chmod 600 /home/vagrant/install_master.sh
-sudo sh /home/vagrant/install_master.sh
-echo I am joining NFS...
-sudo apt-get install nfs-common -y 
-echo installing golang
-apt install golang -y
-echo "GOPATH=$HOME/golang" >> ~/.bashrc
-echo "export GOPATH" >> ~/.bashrc
-echo "PATH=\$PATH:\$GOPATH/bin # Add GOPATH/bin to PATH for scripting" >> ~/.bashrc
-source ~/.bashrc
-
-SCRIPT
 
 
 $worker_script = <<SCRIPT
@@ -144,5 +93,6 @@ echo I am joining NFS...
 sudo apt-get install nfs-common -y
 
 SCRIPT
+
 
 end

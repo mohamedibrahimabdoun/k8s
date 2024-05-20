@@ -1,6 +1,6 @@
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
-name: local-dev-k8s
+name: istio
 networking:
   ipFamily: ipv4
   apiServerAddress: 127.0.0.1
@@ -23,6 +23,13 @@ nodes:
         nodeRegistration:
           kubeletExtraArgs:
              node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP                
     extraMounts:
     - hostPath: /home/
       containerPath: /host_folder
@@ -55,7 +62,7 @@ nodes:
         kind: InitConfiguration
         nodeRegistration:
           kubeletExtraArgs:
-            node-labels: "ingress-ready=true"
+            node-labels: "ingress-ready=true" 
     extraMounts:
     - hostPath: /home/
       containerPath: /host_folder

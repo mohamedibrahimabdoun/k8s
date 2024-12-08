@@ -4,44 +4,61 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/jammy64"
 
+  # Define the master node
   config.vm.define "k8s-master" do |kube|
     kube.vm.hostname = "k8s-master"
     kube.vm.synced_folder ".", "/vagrant"
-    kube.vm.network "private_network", ip: "192.168.56.10" # Adjusted IP within allowed range
-    kube.vm.network "public_network", type: "dhcp"  # NAT via DHCP (default NAT)
-    config.vm.provider :virtualbox do |vb|
-      vb.customize ["modifyvm", :id, "--memory", "3048"]
+    
+    # Public network on the same WiFi network as the host
+    kube.vm.network "public_network", ip: "192.168.4.10", bridge: "wlo1"
+
+    # Configure resources
+    kube.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--memory", "4048"]
       vb.customize ["modifyvm", :id, "--cpus", "2"]
-    end  
+    end
+    
+    # Provisioning script
     kube.vm.provision "shell", inline: $script
   end
- 
-  config.vm.define "kube-01" do |kube|
-    kube.vm.hostname = "kube-01"
-    kube.vm.synced_folder ".", "/vagrant"
-    kube.vm.network "private_network", ip: "192.168.56.11" # Adjusted IP within allowed range
-    kube.vm.network "public_network", type: "dhcp"  # NAT via DHCP
-    config.vm.provider :virtualbox do |vb|
-      vb.customize ["modifyvm", :id, "--memory", "2048"]
-      vb.customize ["modifyvm", :id, "--cpus", "1"]
-    end
-    kube.vm.provision "shell", inline: $worker_script
-  end
-
-  config.vm.define "kube-02" do |kube|
-    kube.vm.hostname = "kube-02"
-    kube.vm.synced_folder ".", "/vagrant"
-    kube.vm.network "private_network", ip: "192.168.56.12" # Adjusted IP within allowed range
-    kube.vm.network "public_network", type: "dhcp"  # NAT via DHCP
-    config.vm.provider :virtualbox do |vb|
-      vb.customize ["modifyvm", :id, "--memory", "2048"]
-      vb.customize ["modifyvm", :id, "--cpus", "1"]
-    end
-    kube.vm.provision "shell", inline: $worker_script
-  end
-
-
-
+#
+#  # Define the first worker node
+#  config.vm.define "kube-01" do |kube|
+#    kube.vm.hostname = "kube-01"
+#    kube.vm.synced_folder ".", "/vagrant"
+#    
+#    # Public network on the same WiFi network as the host
+#    kube.vm.network "public_network", ip: "192.168.4.11", bridge: "wlo1"
+#
+#    # Configure resources
+#    kube.vm.provider :virtualbox do |vb|
+#      vb.customize ["modifyvm", :id, "--memory", "2048"]
+#      vb.customize ["modifyvm", :id, "--cpus", "1"]
+#    end
+#
+#    # Provisioning script
+#    kube.vm.provision "shell", inline: $worker_script
+#  end
+#
+#  # Define the second worker node
+#  config.vm.define "kube-02" do |kube|
+#    kube.vm.hostname = "kube-02"
+#    kube.vm.synced_folder ".", "/vagrant"
+#    
+#    # Public network on the same WiFi network as the host
+#    kube.vm.network "public_network", ip: "192.168.4.12", bridge: "wlo1"
+#
+#    # Configure resources
+#    kube.vm.provider :virtualbox do |vb|
+#      vb.customize ["modifyvm", :id, "--memory", "2048"]
+#      vb.customize ["modifyvm", :id, "--cpus", "1"]
+#    end
+#
+#    # Provisioning script
+#    kube.vm.provision "shell", inline: $worker_script
+#  end
+#
+#
 $worker_script = <<SCRIPT
 echo I am provisioning...
 echo setting ssh key and configs
@@ -66,10 +83,10 @@ echo I am turning off swap...
 sudo echo "vm.swappiness=10" >> /etc/sysctl.conf
 sudo sysctl --system
 sudo swapoff -a
-echo copying install_master.sh
+echo copying install_worker.sh
 sudo cp /vagrant/install_worker.sh  /home/vagrant/install_worker.sh
 sudo chmod 600 /home/vagrant/install_worker.sh
-sudo sh /home/vagrant/install_worker.sh
+#sudo sh /home/vagrant/install_worker.sh
 echo I am joining NFS...
 sudo apt-get install nfs-common -y
 echo $(id)
@@ -91,6 +108,11 @@ sudo sysctl --system
 sudo swapoff -a
 echo I am joining NFS...
 sudo apt-get install nfs-common -y
+
+echo copying install_master.sh
+sudo cp /vagrant/install_master.sh  /home/vagrant/install_master.sh
+sudo chmod 600 /home/vagrant/install_master.sh
+#sudo sh /home/vagrant/install_master.sh
 
 SCRIPT
 

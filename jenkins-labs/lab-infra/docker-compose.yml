@@ -1,0 +1,91 @@
+version: '2.4'
+      
+services:
+
+  proxy:
+    image: ${PROXY_IMAGE}
+    container_name: proxy
+    read_only: true
+    privileged: true
+    environment:
+      - EXTERNAL_DOMAIN=${EXTERNAL_DOMAIN}
+      - EXTERNAL_PORT=${EXTERNAL_PORT}
+      - DOCS_HOSTNAME=${DOCS_HOSTNAME}
+      - DOCS_PATH=${DOCS_PATH}
+      - USE_LOCATIONS_FROM_LIBRARY=jenkins
+    ports:
+      - "${EXTERNAL_PORT}:${EXTERNAL_PORT}" # Publish to external world
+    volumes:
+      - ./proxy/service-list.html:/usr/share/nginx/html/service-list.html:ro
+      - /var/tmp/nginx
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    depends_on:
+      jenkins:
+        condition: service_started
+      
+  docker-service:
+    #image: verb/socat:alpine
+    image: ${DOCKER_SERVICE_IMAGE}
+    restart: unless-stopped
+    command: tcp-listen:2375,reuseaddr,fork unix:/docker.sock
+    expose:
+      - "2375"
+    volumes:
+      - /var/run/docker.sock:/docker.sock
+
+  jenkins:
+    image: ${JENKINS_IMAGE}
+    container_name: jenkins
+    restart: unless-stopped
+    privileged: true
+    expose:
+      - "8080" # HTTP
+      - "50000" # JNLP
+    volumes:
+      - ./jenkins/10-configure-agents.groovy:/usr/share/jenkins/ref/init.groovy.d/10-configure-agents.groovy
+      - ./jenkins/11-configure-master.groovy:/usr/share/jenkins/ref/init.groovy.d/11-configure-master.groovy
+      - ./jenkins/12-configure-master.groovy:/usr/share/jenkins/ref/init.groovy.d/12-configure-master.groovy
+      - ./jenkins/13-configure-master.groovy:/usr/share/jenkins/ref/init.groovy.d/13-configure-master.groovy
+      - ./jenkins/12-configure-go1.17.groovy:/usr/share/jenkins/ref/init.groovy.d/12-configure-go1.17.groovy
+      - /Users/dgautam/lfs-jenkins-config:/var/jenkins_home
+    depends_on:
+      - jdk17-ssh-agent
+      - jdk21-ssh-agent
+    extra_hosts:
+      - "${EXTERNAL_DOMAIN}:${DOCKER_BRIDGE_IP}"
+    environment:
+      - JENKINS_EXTERNAL_URL=http://${EXTERNAL_DOMAIN}:${EXTERNAL_PORT}/jenkins
+      - JENKINS_OPTS=--prefix=/jenkins
+    healthcheck:
+      test: curl --user student:lfs267 -sS http://localhost:8080/jenkins/ | grep "Jenkins 2.440.2" || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+
+  jdk17-ssh-agent:
+    image: ${JDK17_IMAGE}
+    container_name: jdk17-ssh-agent
+    restart: unless-stopped
+    privileged: true
+    expose:
+      - "22" # SSH
+    extra_hosts:
+      - "${EXTERNAL_DOMAIN}:${DOCKER_BRIDGE_IP}"
+    environment:
+      - START_DOCKER=yes
+      - JENKINS_SLAVE_SSH_PUBKEY=ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key
+
+  jdk21-ssh-agent:
+    image: ${JDK21_IMAGE}
+    container_name: jdk21-ssh-agent
+    restart: unless-stopped
+    privileged: true
+    expose:
+      - "22" # SSH
+    extra_hosts:
+      - "${EXTERNAL_DOMAIN}:${DOCKER_BRIDGE_IP}"
+    environment:
+      - JENKINS_AGENT_SSH_PUBKEY=ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key

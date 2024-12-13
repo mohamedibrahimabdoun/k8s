@@ -10,55 +10,76 @@ Vagrant.configure("2") do |config|
     kube.vm.synced_folder ".", "/vagrant"
     
     # Public network on the same WiFi network as the host
-    kube.vm.network "public_network", ip: "192.168.4.10", bridge: "wlo1"
+    kube.vm.network "public_network", ip: "192.168.4.100", bridge: "wlo1"
 
     # Configure resources
     kube.vm.provider :virtualbox do |vb|
-      vb.customize ["modifyvm", :id, "--memory", "4048"]
+      vb.customize ["modifyvm", :id, "--memory", "8048"]
       vb.customize ["modifyvm", :id, "--cpus", "2"]
     end
     
     # Provisioning script
-    kube.vm.provision "shell", inline: $script
+    #kube.vm.provision "shell", inline: $script
+     kube.vm.provision "shell", path: "install_master.sh"
   end
-#
-#  # Define the first worker node
-#  config.vm.define "kube-01" do |kube|
-#    kube.vm.hostname = "kube-01"
-#    kube.vm.synced_folder ".", "/vagrant"
-#    
-#    # Public network on the same WiFi network as the host
-#    kube.vm.network "public_network", ip: "192.168.4.11", bridge: "wlo1"
-#
-#    # Configure resources
-#    kube.vm.provider :virtualbox do |vb|
-#      vb.customize ["modifyvm", :id, "--memory", "2048"]
-#      vb.customize ["modifyvm", :id, "--cpus", "1"]
-#    end
-#
-#    # Provisioning script
-#    kube.vm.provision "shell", inline: $worker_script
-#  end
-#
-#  # Define the second worker node
-#  config.vm.define "kube-02" do |kube|
-#    kube.vm.hostname = "kube-02"
-#    kube.vm.synced_folder ".", "/vagrant"
-#    
-#    # Public network on the same WiFi network as the host
-#    kube.vm.network "public_network", ip: "192.168.4.12", bridge: "wlo1"
-#
-#    # Configure resources
-#    kube.vm.provider :virtualbox do |vb|
-#      vb.customize ["modifyvm", :id, "--memory", "2048"]
-#      vb.customize ["modifyvm", :id, "--cpus", "1"]
-#    end
-#
-#    # Provisioning script
-#    kube.vm.provision "shell", inline: $worker_script
-#  end
-#
-#
+
+  # Define the first worker node
+  config.vm.define "kube-01" do |kube|
+    kube.vm.hostname = "kube-01"
+    kube.vm.synced_folder ".", "/vagrant"
+
+    # Public network on the same WiFi network as the host
+    kube.vm.network "public_network", ip: "192.168.4.101", bridge: "wlo1"
+
+    # Configure resources
+    kube.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--memory", "8048"]
+      vb.customize ["modifyvm", :id, "--cpus", "2"]
+    end
+
+    # Provisioning script
+    #kube.vm.provision "shell", inline: $worker_script
+     kube.vm.provision "shell", path: "install_worker.sh"
+  end
+
+  # Define the second worker node
+  config.vm.define "kube-02" do |kube|
+    kube.vm.hostname = "kube-02"
+    kube.vm.synced_folder ".", "/vagrant"
+
+    # Public network on the same WiFi network as the host
+    kube.vm.network "public_network", ip: "192.168.4.102", bridge: "wlo1"
+
+    # Configure resources
+    kube.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--memory", "8048"]
+      vb.customize ["modifyvm", :id, "--cpus", "2"]
+    end
+
+    # Provisioning script
+    #kube.vm.provision "shell", inline: $worker_script
+     kube.vm.provision "shell", path: "install_worker.sh"
+  end
+
+  config.vm.define "kube-03" do |kube|
+    kube.vm.hostname = "kube-03"
+    kube.vm.synced_folder ".", "/vagrant"
+
+    # Public network on the same WiFi network as the host
+    kube.vm.network "public_network", ip: "192.168.4.103", bridge: "wlo1"
+
+    # Configure resources
+    kube.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--memory", "8048"]
+      vb.customize ["modifyvm", :id, "--cpus", "2"]
+    end
+
+    # Provisioning script
+    #kube.vm.provision "shell", inline: $worker_script
+     kube.vm.provision "shell", path: "install_worker.sh"
+  end
+
+
 $worker_script = <<SCRIPT
 echo I am provisioning...
 echo setting ssh key and configs
@@ -70,8 +91,8 @@ sudo cat /vagrant/ssh/id_rsa.pub > /root/.ssh/authorized_keys
 chmod -R 600 /home/vagrant/.ssh/authorized_keys
 echo 'StrictHostKeyChecking no' >> /home/vagrant/.ssh/config
 echo 'UserKnownHostsFile /dev/null' >> /home/vagrant/.ssh/config
- chmod -R 600 /home/vagrant/.ssh/config
- sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+chmod -R 600 /home/vagrant/.ssh/config
+sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/g' /etc/ssh/sshd_config
 sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
 sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
 systemctl restart ssh
@@ -112,7 +133,8 @@ sudo apt-get install nfs-common -y
 echo copying install_master.sh
 sudo cp /vagrant/install_master.sh  /home/vagrant/install_master.sh
 sudo chmod 600 /home/vagrant/install_master.sh
-#sudo sh /home/vagrant/install_master.sh
+sudo chown vargant:vagrant /home/vagrant/install_master.sh
+sudo bash /home/vagrant/install_master.sh
 
 SCRIPT
 

@@ -207,19 +207,19 @@ helm repo update && echo -e "${GREEN}Helm repos updated.${NC}"
 
 kubectl create namespace "$NAMESPACE_ISTIO" || true
 
-helm install istio-base istio/base -n "$NAMESPACE_ISTIO" --version 1.23.0
+helm install istio-base istio/base -n "$NAMESPACE_ISTIO" --version 1.21.0
 echo -e "${YELLOW}Waiting a moment for istio-base CRDs...${NC}"
 sleep 10
 
 helm install istiod istio/istiod -n "$NAMESPACE_ISTIO" \
-  --version 1.23.0 \
+  --version 1.21.0 \
   --set global.proxy.autoInject=enabled \
   --set global.proxy.privileged=true \
   --set meshConfig.accessLogFile="/dev/stdout"
 echo -e "${YELLOW}Waiting for istiod to be ready...${NC}"
 kubectl rollout status -n "$NAMESPACE_ISTIO" deployment/istiod
 
-helm install istio-ingressgateway istio/gateway -n "$NAMESPACE_ISTIO" --version 1.23.0
+helm install istio-ingressgateway istio/gateway -n "$NAMESPACE_ISTIO" --version 1.21.0
 echo -e "${YELLOW}Waiting for istio-ingressgateway to be ready...${NC}"
 kubectl rollout status -n "$NAMESPACE_ISTIO" deployment/istio-ingressgateway
 

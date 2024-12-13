@@ -1,4 +1,13 @@
-#!/bin/sh
+#!/bin/bash
+
+set -euo pipefail
+
+# ANSI color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
 
 # Source: http://kubernetes.io/docs/getting-started-guides/kubeadm/
 
@@ -14,49 +23,231 @@ echo 'alias c=clear' >> ~/.bashrc
 echo 'complete -F __start_kubectl k' >> ~/.bashrc
 sed -i '1s/^/force_color_prompt=yes\n/' ~/.bashrc
 
+# ============================
+# Variables
+# ============================
+KUBE_VERSION="1.29.0"  # Ensure this version exists in the Kubernetes repository
+APISERVER_ADVERTISE_ADDRESS="192.168.4.100"
+POD_NETWORK_CIDR="10.244.0.0/16"
+CRICTL_VERSION="v1.32.0"
+SSH_DIR="/home/vagrant/.ssh"
+ROOT_SSH_DIR="/root/.ssh"
+VAGRANT_USER="vagrant"
 
-### install k8s and docker
-apt-get remove -y docker.io kubelet kubeadm kubectl kubernetes-cni
-apt-get autoremove -y
-apt-get install -y etcd-client vim build-essential
 
-systemctl daemon-reload
-curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
-deb http://apt.kubernetes.io/ kubernetes-xenial main
+# 1. Set up SSH for vagrant user
+echo -e "${CYAN}Setting up SSH for vagrant user....${NC}"
+mkdir -p $SSH_DIR
+chmod 700 $SSH_DIR
+cat /vagrant/ssh/id_rsa.pub >> $SSH_DIR/authorized_keys
+chmod 600 $SSH_DIR/authorized_keys
+
+# Copy private key
+cp /vagrant/ssh/id_rsa $SSH_DIR/id_rsa
+chmod 600 $SSH_DIR/id_rsa
+
+# 2. Set up SSH for root user
+echo -e "${CYAN}Setting up SSH for root user...${NC}"
+sudo mkdir -p $ROOT_SSH_DIR
+sudo chmod 700 $ROOT_SSH_DIR
+sudo cat /vagrant/ssh/id_rsa.pub >> $ROOT_SSH_DIR/authorized_keys
+sudo chmod 600 $ROOT_SSH_DIR/authorized_keys
+
+# Copy private key to root
+sudo cp /vagrant/ssh/id_rsa $ROOT_SSH_DIR/id_rsa
+sudo chmod 600 $ROOT_SSH_DIR/id_rsa
+
+# 3. Configure SSH to disable StrictHostKeyChecking
+echo -e "${CYAN}Configuring SSH...${NC}"
+echo 'StrictHostKeyChecking no' >> $SSH_DIR/config
+echo 'UserKnownHostsFile /dev/null' >> $SSH_DIR/config
+chmod 600 $SSH_DIR/config
+
+sudo bash -c "echo 'StrictHostKeyChecking no' >> $ROOT_SSH_DIR/config"
+sudo bash -c "echo 'UserKnownHostsFile /dev/null' >> $ROOT_SSH_DIR/config"
+sudo chmod 600 $ROOT_SSH_DIR/config
+
+# 4. Update SSHD configuration
+echo -e "${CYAN}Updating SSHD configuration...${NC}"
+sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
+sudo sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
+sudo systemctl restart ssh
+
+# 5. Set root password
+echo -e "${CYAN}Setting root password....${NC}"
+echo -e "r00tr00t\nr00tr00t" | sudo passwd root
+
+# 6. Copy hosts file
+
+echo -e "${CYAN}Copying hosts file...${NC}"
+sudo cp /vagrant/hosts_vmware /etc/hosts
+
+
+# ============================
+# Remove Old Kubernetes and Docker Versions
+# ============================
+echo -e "${CYAN}Removing old Docker and Kubernetes packages....${NC}"
+sudo apt-get remove -y docker.io kubelet kubeadm kubectl kubernetes-cni || true
+sudo apt-get autoremove -y
+
+# ============================
+# Remove Existing Kubernetes Repositories
+# ============================
+echo -e "${CYAN}Removing any existing Kubernetes APT repositories..${NC}"
+sudo rm -f /etc/apt/sources.list.d/kubernetes.list
+
+# ============================
+# Load Required Kernel Modules
+# ============================
+echo -e "${CYAN}Loading required kernel modules..${NC}"
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
 EOF
-KUBE_VERSION=1.20.6
-apt-get update
-apt-get install -y docker.io kubelet=${KUBE_VERSION}-00 kubeadm=${KUBE_VERSION}-00 kubectl=${KUBE_VERSION}-00 kubernetes-cni=0.8.7-00
 
-cat > /etc/docker/daemon.json <<EOF
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "storage-driver": "overlay2"
-}
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+# ============================
+# Disable Swap
+# ============================
+echo -e "${CYAN}Disabling swap..${NC}"
+sudo swapoff -a
+sudo sed -i '/ swap / s/^/#/' /etc/fstab
+
+# ============================
+# Apply Kernel Parameters
+# ============================
+echo -e "${CYAN}Applying kernel parameters for Kubernetes...${NC}"
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
 EOF
-mkdir -p /etc/systemd/system/docker.service.d
 
-# Restart docker.
-systemctl daemon-reload
-systemctl restart docker
+sudo sysctl --system
 
-# start docker on reboot
-systemctl enable docker
+# ============================
+# Install Dependencies
+# ============================
+echo -e "${CYAN}Installing required packages....${NC}"
+sudo apt-get update -y
+sudo apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release \
+    socat \
+    net-tools
 
-docker info | grep -i "storage"
-docker info | grep -i "cgroup"
+# ============================
+# Install Containerd
+# ============================
+echo -e "${CYAN}Installing and configuring containerd....${NC}"
+# Add Docker’s official GPG key and set up the stable repository
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
-systemctl enable kubelet && systemctl start kubelet
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
+# Update package index and install containerd and Docker packages
+sudo apt-get update -y
+sudo apt-get install -y \
+    containerd.io \
+    docker-ce \
+    docker-ce-cli \
+    docker-buildx-plugin \
+    docker-compose-plugin
 
-### init k8s
-kubeadm reset -f
-systemctl daemon-reload
-service kubelet start
+# Configure containerd to use systemd as the cgroup driver
+sudo mkdir -p /etc/containerd
+sudo containerd config default | sudo tee /etc/containerd/config.toml
 
-echo
-echo "EXECUTE ON MASTER: kubeadm token create --print-join-command --ttl 0"
-echo "THEN RUN THE OUTPUT AS COMMAND HERE TO ADD AS WORKER"
-echo
+sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+
+# Restart and enable containerd
+sudo systemctl restart containerd
+sudo systemctl enable containerd
+
+# ============================
+# Install crictl
+# ============================
+echo -e "${CYAN}Installing crictl...${NC}"
+wget https://github.com/kubernetes-sigs/cri-tools/releases/download/$CRICTL_VERSION/crictl-$CRICTL_VERSION-linux-amd64.tar.gz
+sudo tar zxvf crictl-$CRICTL_VERSION-linux-amd64.tar.gz -C /usr/local/bin
+rm -f crictl-$CRICTL_VERSION-linux-amd64.tar.gz
+
+# Verify crictl installation
+crictl --version
+
+# ============================
+# Configure crictl
+# ============================
+echo -e "${CYAN}Configuring crictl...${NC}"
+sudo tee /etc/crictl.yaml > /dev/null <<EOF
+runtime-endpoint: unix:///var/run/containerd/containerd.sock
+image-endpoint: unix:///var/run/containerd/containerd.sock
+timeout: 10
+debug: false
+EOF
+
+# ============================
+# Add Kubernetes Apt Repository
+# ============================
+echo -e "${CYAN}Adding Kubernetes APT repository for version ${KUBE_VERSION}...${NC}"
+# Install kubeadm, kubelet and kubectl
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+# This overwrites any existing configuration in /etc/apt/sources.list.d/kubernetes.list
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+# ============================
+# Install kubelet, kubeadm, kubectl
+# ============================
+echo -e "${CYAN}Installing kubelet, kubeadm, and kubectl...${NC}"
+sudo apt-get update -y
+sudo apt-get install -y \
+    kubelet=${KUBE_VERSION}-1.1 \
+    kubeadm=${KUBE_VERSION}-1.1 \
+    kubectl=${KUBE_VERSION}-1.1
+
+# Detect the 192.168.4.x IP
+PUBLIC_IP=$(hostname -I | tr ' ' '\n' | grep '^192\.168\.4\.' | head -n 1)
+
+if [ -z "$PUBLIC_IP" ]; then
+  echo "Error: Unable to detect the 192.168.4.x IP address."
+  exit 1
+fi
+
+echo -e "${CYAN} nodeIP: ${PUBLIC_IP}...${NC}"
+sudo bash -c "cat <<EOF > /var/lib/kubelet/config.yaml
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+containerRuntime: remote
+containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
+podInfraContainerImage: registry.k8s.io/pause:3.9
+nodeIP: $PUBLIC_IP
+EOF"
+
+# Restart and enable kubelet
+echo "Restarting and enabling kubelet..."
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+sudo systemctl enable kubelet
+
+# Retrieve kubeadm join command from master
+
+echo -e "${CYAN}Retrieving kubeadm join command from master...${NC}"
+JOIN_COMMAND=$(ssh -i /home/vagrant/.ssh/id_rsa -o StrictHostKeyChecking=no root@192.168.4.100 "kubeadm token create --print-join-command --ttl 0")
+echo "..."
+echo -e "${CYAN}Joining Kubernetes cluster...${NC}"
+eval "sudo $JOIN_COMMAND"
+
+echo -e "${GREEN}#### Worker node provisioning complete ####.${NC}"
+echo ""

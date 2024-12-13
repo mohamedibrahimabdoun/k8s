@@ -17,6 +17,61 @@ KUBE_VERSION="1.29.0"  # Ensure this version exists in the Kubernetes repository
 APISERVER_ADVERTISE_ADDRESS="192.168.4.100"
 POD_NETWORK_CIDR="10.244.0.0/16"
 CRICTL_VERSION="v1.32.0"
+SSH_DIR="/home/vagrant/.ssh"
+ROOT_SSH_DIR="/root/.ssh"
+VAGRANT_USER="vagrant"
+NAMESPACE_MONITORING="monitoring"
+NAMESPACE_ISTIO="istio-system"
+METALLB_NAMESPACE="metallb-system"
+
+echo -e "${YELLOW}..#### Provisioning a Worker Node ####..${NC}"
+
+# 1. Set up SSH for vagrant user
+echo -e "${CYAN}Setting up SSH for vagrant user....${NC}"
+mkdir -p $SSH_DIR
+chmod 700 $SSH_DIR
+cat /vagrant/ssh/id_rsa.pub >> $SSH_DIR/authorized_keys
+chmod 600 $SSH_DIR/authorized_keys
+
+# Copy private key
+cp /vagrant/ssh/id_rsa $SSH_DIR/id_rsa
+chmod 600 $SSH_DIR/id_rsa
+
+# 2. Set up SSH for root user
+echo -e "${CYAN}Setting up SSH for root user....${NC}"
+sudo mkdir -p $ROOT_SSH_DIR
+sudo chmod 700 $ROOT_SSH_DIR
+sudo cat /vagrant/ssh/id_rsa.pub >> $ROOT_SSH_DIR/authorized_keys
+sudo chmod 600 $ROOT_SSH_DIR/authorized_keys
+
+# Copy private key to root
+sudo cp /vagrant/ssh/id_rsa $ROOT_SSH_DIR/id_rsa
+sudo chmod 600 $ROOT_SSH_DIR/id_rsa
+
+# 3. Configure SSH to disable StrictHostKeyChecking
+echo -e "${CYAN}Configuring SSH...${NC}"
+echo 'StrictHostKeyChecking no' >> $SSH_DIR/config
+echo 'UserKnownHostsFile /dev/null' >> $SSH_DIR/config
+chmod 600 $SSH_DIR/config
+
+sudo bash -c "echo 'StrictHostKeyChecking no' >> $ROOT_SSH_DIR/config"
+sudo bash -c "echo 'UserKnownHostsFile /dev/null' >> $ROOT_SSH_DIR/config"
+sudo chmod 600 $ROOT_SSH_DIR/config
+
+# 4. Update SSHD configuration
+echo -e "${CYAN}Updating SSHD configuration....${NC}"
+sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
+sudo sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
+sudo systemctl restart ssh
+
+# 5. Set root password
+echo "Setting root password..."
+echo -e "r00tr00t\nr00tr00t" | sudo passwd root
+
+# 6. Copy hosts file
+echo -e "${CYAN}Copying hosts file....${NC}"
+sudo cp /vagrant/hosts_vmware /etc/hosts
 
 # ============================
 # Remove Old Kubernetes and Docker Versions
@@ -153,20 +208,29 @@ sudo apt-get install -y \
 # Hold the Kubernetes packages at the current version
 sudo apt-mark hold kubelet kubeadm kubectl
 
+# Detect the 192.168.4.x IP
+echo -e "${CYAN} Detect the 192.168.4.x IP ${NC}"
+PUBLIC_IP=$(hostname -I | tr ' ' '\n' | grep '^192\.168\.4\.' | head -n 1)
+
+if [ -z "$PUBLIC_IP" ]; then
+  echo "Error: Unable to detect the 192.168.4.x IP address."
+  exit 1
+fi
+
+echo -e "${CYAN} nodeIP: ${PUBLIC_IP}...${NC}"
 # ============================
 # Configure Kubelet
 # ============================
 echo -e "${CYAN}Configuring kubelet..${NC}"
-
-# Create or update the kubelet configuration file
-sudo bash -c 'cat <<EOF > /var/lib/kubelet/config.yaml
+sudo bash -c "cat <<EOF > /var/lib/kubelet/config.yaml
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
 cgroupDriver: systemd
 containerRuntime: remote
 containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
 podInfraContainerImage: registry.k8s.io/pause:3.9
-EOF'
+nodeIP: $PUBLIC_IP
+EOF"
 
 # ============================
 # Restart and Enable kubelet
@@ -241,6 +305,101 @@ helm install cilium cilium/cilium --version 1.14.2 \
 
 echo "Your Kubernetes cluster should now be up and running."
 
+########################################
+# Install MetalLB
+########################################
+echo -e "${CYAN}Installing MetalLB...${NC}"
+helm repo add metallb https://metallb.github.io/metallb && echo -e "${GREEN}MetalLB repo added.${NC}"
+helm repo update && echo -e "${GREEN}Helm repos updated.${NC}"
+
+helm install metallb metallb/metallb -n "$METALLB_NAMESPACE" --create-namespace \
+  --set controller.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set controller.tolerations[0].operator=Exists \
+  --set controller.tolerations[0].effect=NoSchedule \
+  --set speaker.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set speaker.tolerations[0].operator=Exists \
+  --set speaker.tolerations[0].effect=NoSchedule
+
+echo -e "${YELLOW}Waiting for MetalLB controller to be ready...${NC}"
+kubectl rollout status -n "$METALLB_NAMESPACE" deployment/metallb-controller
+echo -e "${GREEN}MetalLB installed successfully.${NC}"
+
+echo -e "${CYAN}Configuring MetalLB IPAddressPool...${NC}"
+echo -e "${GREEN}Using IP range 192.168.4.200-192.168.4.220 for MetalLB...${NC}"
+
+cat <<EOF | kubectl apply -f -
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: first-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 192.168.4.200-192.168.4.220
+EOF
+
+cat <<EOF | kubectl apply -f -
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: example
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - first-pool
+EOF
+echo -e "${GREEN}MetalLB IPAddressPool and L2Advertisement configured.${NC}"
+
+########################################
+# Install Prometheus
+########################################
+echo -e "${CYAN}Installing Prometheus...${NC}"
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts && echo -e "${GREEN}Prometheus repo added.${NC}"
+helm repo update && echo -e "${GREEN}Helm repos updated.${NC}"
+helm install prometheus prometheus-community/prometheus \
+  --namespace "$NAMESPACE_MONITORING" \
+  --create-namespace \
+  --set server.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set server.tolerations[0].operator=Exists \
+  --set server.tolerations[0].effect=NoSchedule \
+  --set server.persistentVolume.enabled=false \
+  --set alertmanager.enabled=false \
+  --set alertmanager.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set alertmanager.tolerations[0].operator=Exists \
+  --set alertmanager.tolerations[0].effect=NoSchedule \
+  --set alertmanager.config.enabled=false \
+  --set kube-state-metrics.enabled=true \
+  --set kube-state-metrics.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set kube-state-metrics.tolerations[0].operator=Exists \
+  --set kube-state-metrics.tolerations[0].effect=NoSchedule \
+  --set prometheus-pushgateway.enabled=false
+
+
+echo -e "${YELLOW}Waiting for Prometheus pods to be ready...${NC}"
+kubectl rollout status -n "$NAMESPACE_MONITORING" deployment/prometheus-server
+echo -e "${GREEN}Prometheus installed successfully.${NC}"
+
+
+########################################
+# Install Grafana
+########################################
+echo -e "${CYAN}Installing Grafana...${NC}"
+helm repo add grafana https://grafana.github.io/helm-charts && echo -e "${GREEN}Grafana repo added.${NC}"
+helm repo update && echo -e "${GREEN}Helm repos updated.${NC}"
+helm install grafana grafana/grafana \
+  --namespace "$NAMESPACE_MONITORING" \
+  --set tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set tolerations[0].operator=Exists \
+  --set tolerations[0].effect=NoSchedule
+
+echo -e "${YELLOW}Waiting for Grafana pod to be ready...${NC}"
+kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=grafana -n "$NAMESPACE_MONITORING" --timeout=180s
+echo -e "${GREEN}Grafana installed successfully.${NC}"
+
+GRAFANA_PW=$(kubectl get secret --namespace "$NAMESPACE_MONITORING" grafana  -o jsonpath="{.data.admin-password}" | base64 --decode)
+echo -e "${GREEN}Grafana admin password: $GRAFANA_PW${NC}"
+
+
 # ============================
 # Final Instructions
 # ============================
@@ -257,6 +416,15 @@ echo "Install a pod network, such as Cilium (already installed):"
 echo "helm repo add cilium https://helm.cilium.io/"
 echo "helm repo update"
 echo "helm install cilium cilium/cilium --version 1.14.2 --namespace kube-system [additional parameters as needed]"
+
+# Save the kubeadm join command to a shared file for workers
+echo -e "${CYAN}Saving kubeadm join command.${NC}"
+JOIN_COMMAND=$(sudo kubeadm token create --print-join-command --ttl 0)
+echo "$JOIN_COMMAND" > /vagrant/join_command.sh
+chmod +x /vagrant/join_command.sh
+
+echo -e "${GREEN}#### Master node provisioning complete ####.${NC}"
+
 
 # ============================
 # Optional: Enable Firewall with Necessary Ports

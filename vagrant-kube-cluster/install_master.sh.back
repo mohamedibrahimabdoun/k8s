@@ -16,7 +16,7 @@ sed -i '1s/^/force_color_prompt=yes\n/' ~/.bashrc
 
 
 ### install k8s and docker
-apt-get remove -y docker.io kubelet kubeadm kubectl kubernetes-cni
+apt-get remove -y docker.io kubelet kubeadm kubectl kubernetes-cni net-tools
 apt-get autoremove -y
 apt-get install -y etcd-client vim build-essential
 
@@ -27,7 +27,7 @@ deb http://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 KUBE_VERSION=1.20.6
 apt-get update
-apt-get install -y docker.io kubelet=${KUBE_VERSION}-00 kubeadm=${KUBE_VERSION}-00 kubectl=${KUBE_VERSION}-00 kubernetes-cni=0.8.7-00
+apt-get install -y docker.io kubelet=${KUBE_VERSION}-01 kubeadm=${KUBE_VERSION}-00 kubectl=${KUBE_VERSION}-00 kubernetes-cni=0.8.7-00
 
 cat > /etc/docker/daemon.json <<EOF
 {

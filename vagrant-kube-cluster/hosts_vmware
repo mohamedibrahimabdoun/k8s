@@ -1,6 +1,6 @@
 127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
 ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
 
-172.16.206.100 k8smaster
-172.16.206.101 kube01
-172.16.206.102 kube02
+192.168.4.100 k8smaster
+192.168.4.101 kube01
+192.168.4.102 kube02

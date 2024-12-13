@@ -10,7 +10,7 @@ Vagrant.configure("2") do |config|
     kube.vm.synced_folder ".", "/vagrant"
     
     # Public network on the same WiFi network as the host
-    kube.vm.network "public_network", ip: "192.168.4.10", bridge: "wlo1"
+    kube.vm.network "public_network", ip: "192.168.4.100", bridge: "wlo1"
 
     # Configure resources
     kube.vm.provider :virtualbox do |vb|
@@ -112,7 +112,8 @@ sudo apt-get install nfs-common -y
 echo copying install_master.sh
 sudo cp /vagrant/install_master.sh  /home/vagrant/install_master.sh
 sudo chmod 600 /home/vagrant/install_master.sh
-#sudo sh /home/vagrant/install_master.sh
+sudo chown vargant:vagrant /home/vagrant/install_master.sh
+sudo bash /home/vagrant/install_master.sh
 
 SCRIPT
 

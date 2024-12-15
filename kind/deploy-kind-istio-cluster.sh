@@ -215,7 +215,11 @@ helm install istiod istio/istiod -n "$NAMESPACE_ISTIO" \
   --version 1.21.0 \
   --set global.proxy.autoInject=enabled \
   --set global.proxy.privileged=true \
-  --set meshConfig.accessLogFile="/dev/stdout"
+  --set meshConfig.accessLogFile="/dev/stdout" \
+  --set persistence.enabled=true \
+  --set persistence.storageClass=local-path \
+  --set persistence.size=8Gi
+
 echo -e "${YELLOW}Waiting for istiod to be ready...${NC}"
 kubectl rollout status -n "$NAMESPACE_ISTIO" deployment/istiod
 

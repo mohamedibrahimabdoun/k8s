@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # ============================
 KUBE_VERSION="1.29.0"  # Ensure this version exists in the Kubernetes repository
 APISERVER_ADVERTISE_ADDRESS="192.168.4.100"
-POD_NETWORK_CIDR="10.244.0.0/16"
+POD_NETWORK_CIDR="172.17.0.0/16"
 CRICTL_VERSION="v1.32.0"
 SSH_DIR="/home/vagrant/.ssh"
 ROOT_SSH_DIR="/root/.ssh"

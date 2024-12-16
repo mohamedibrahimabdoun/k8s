@@ -16,6 +16,7 @@ NC='\033[0m' # No Color
 KUBE_VERSION="1.29.0"  # Ensure this version exists in the Kubernetes repository
 APISERVER_ADVERTISE_ADDRESS="192.168.4.100"
 POD_NETWORK_CIDR="172.17.0.0/16"
+SERVICE_NETWORK_CIDR="10.96.0.0/12"
 CRICTL_VERSION="v1.32.0"
 SSH_DIR="/home/vagrant/.ssh"
 ROOT_SSH_DIR="/root/.ssh"
@@ -23,6 +24,7 @@ VAGRANT_USER="vagrant"
 NAMESPACE_MONITORING="monitoring"
 NAMESPACE_ISTIO="istio-system"
 METALLB_NAMESPACE="metallb-system"
+KUBE_JOIN_FILE="/vagrant/kubeadm-join-config.yaml"
 
 echo -e "${YELLOW}..#### Provisioning a Worker Node ####..${NC}"
 
@@ -205,9 +207,6 @@ sudo apt-get install -y \
     kubeadm=${KUBE_VERSION}-1.1 \
     kubectl=${KUBE_VERSION}-1.1
 
-# Hold the Kubernetes packages at the current version
-sudo apt-mark hold kubelet kubeadm kubectl
-
 # Detect the 192.168.4.x IP
 echo -e "${CYAN} Detect the 192.168.4.x IP ${NC}"
 PUBLIC_IP=$(hostname -I | tr ' ' '\n' | grep '^192\.168\.4\.' | head -n 1)
@@ -219,19 +218,72 @@ fi
 
 echo -e "${CYAN} nodeIP: ${PUBLIC_IP}...${NC}"
 # ============================
-# Configure Kubelet
+# Configure kubeadm
 # ============================
-echo -e "${CYAN}Configuring kubelet..${NC}"
-sudo bash -c "cat <<EOF > /var/lib/kubelet/config.yaml
+echo -e "${CYAN}Configuring kubeadm..${NC}"
+sudo bash -c "cat <<EOF > /root/kubeadm-init-config.yaml
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+nodeRegistration:
+  name: k8s-master
+  kubeletExtraArgs:
+    node-ip: "${PUBLIC_IP}"        # Replace with the master node's internal IP
+    cgroup-driver: "systemd"        # Recommended cgroup driver
+localAPIEndpoint:
+  advertiseAddress: "${PUBLIC_IP}"  # Equivalent to --apiserver-advertise-address
+  bindPort: 6443                      # Equivalent to --apiserver-bind-port (default is 6443)
+
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+kubernetesVersion: "v${KUBE_VERSION}"        # Specify Kubernetes version
+controlPlaneEndpoint: "${PUBLIC_IP}:6443"  # Replace with your master node's IP and port
+apiServer:
+  certSANs:
+    - "${PUBLIC_IP}"                  # Replace with additional SANs if needed
+  extraArgs:
+    authorization-mode: "Node,RBAC"    # Example extra argument
+    bind-address: "0.0.0.0"            # Set as an extra argument
+controllerManager:
+  extraArgs:
+    bind-address: "0.0.0.0"            # Example extra argument
+scheduler:
+  extraArgs:
+    bind-address: "0.0.0.0"                 # Example extra argument
+networking:
+  podSubnet:  "${POD_NETWORK_CIDR}"          # Replace with your Pod network CIDR
+  serviceSubnet: "${SERVICE_NETWORK_CIDR}"        # Replace with your Service network CIDR
+  dnsDomain: "cluster.local"           # Replace with your DNS domain
+---
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
-cgroupDriver: systemd
-containerRuntime: remote
-containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
-podInfraContainerImage: registry.k8s.io/pause:3.9
-nodeIP: $PUBLIC_IP
+cgroupDriver: "systemd"
+clusterDNS:
+  - "10.96.0.10"                       # Default cluster DNS, modify if needed
+clusterDomain: "cluster.local"
+failSwapOn: false
+authentication:
+  anonymous:
+    enabled: false
+  webhook:
+    enabled: true
+  x509:
+    clientCAFile: "/etc/kubernetes/pki/ca.crt"
+authorization:
+  mode: "Webhook"
+  webhook:
+    cacheAuthorizedTTL: "5m"
+    cacheUnauthorizedTTL: "30s"
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: "iptables"                       # Can be ipvs if preferred
+clusterCIDR: "${POD_NETWORK_CIDR}"
+
 EOF"
 
+echo -e "${CYAN} verifying  kubeadm configurations..${NC}"
+cat  /root/kubeadm-init-config.yaml
 # ============================
 # Restart and Enable kubelet
 # ============================
@@ -239,6 +291,7 @@ echo -e "${CYAN}Restarting and enabling kubelet..${NC}"
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet
 sudo systemctl enable kubelet
+
 
 # ============================
 # Verify Container Runtime
@@ -259,13 +312,15 @@ sudo kubeadm config images pull --kubernetes-version=${KUBE_VERSION}
 
 # Initialize the cluster
 echo -e "${CYAN}Initialize the cluster using kubeadm..${NC}"
-sudo kubeadm init --kubernetes-version=${KUBE_VERSION} \
-    --pod-network-cidr=${POD_NETWORK_CIDR} \
-    --apiserver-cert-extra-sans=${APISERVER_ADVERTISE_ADDRESS} \
-    --apiserver-advertise-address=${APISERVER_ADVERTISE_ADDRESS} \
-    --ignore-preflight-errors=NumCPU
+sudo sudo kubeadm init --config=/root/kubeadm-init-config.yaml --ignore-preflight-errors=NumCPU
 
 #    --apiserver-advertise-address=${APISERVER_ADVERTISE_ADDRESS} \
+
+echo "nodeIP: $PUBLIC_IP" >>  /var/lib/kubelet/config.yaml
+echo -e "${CYAN}verify kubelet config in :/var/lib/kubelet/config.yaml ...${NC}"
+sudo systemctl restart kubelet
+cat /var/lib/kubelet/config.yaml
+
 # ============================
 # Set Up Local kubeconfig
 # ============================
@@ -410,18 +465,35 @@ echo "mkdir -p ~/.kube"
 echo "sudo cp -i /etc/kubernetes/admin.conf ~/.kube/config"
 echo "sudo chown $(id -u):$(id -g) ~/.kube/config"
 
-echo "Installing Helm has been completed."
-
-echo "Install a pod network, such as Cilium (already installed):"
-echo "helm repo add cilium https://helm.cilium.io/"
-echo "helm repo update"
-echo "helm install cilium cilium/cilium --version 1.14.2 --namespace kube-system [additional parameters as needed]"
-
 # Save the kubeadm join command to a shared file for workers
-echo -e "${CYAN}Saving kubeadm join command.${NC}"
+echo -e "${CYAN}Saving kubeadm join command to join_command.sh script .${NC}"
 JOIN_COMMAND=$(sudo kubeadm token create --print-join-command --ttl 0)
 echo "$JOIN_COMMAND" > /vagrant/join_command.sh
 chmod +x /vagrant/join_command.sh
+
+
+# ============================
+# Generate kubeadm Join Config
+# ============================
+echo -e "${CYAN}Generating kubeadm join configuration and saving it to ${KUBE_JOIN_FILE}...${NC}"
+TOKEN=$(kubeadm token create)
+DISCOVERY_TOKEN_CA_CERT_HASH=$(openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | \
+  openssl rsa -pubin -outform der 2>/dev/null | \
+  openssl dgst -sha256 -hex | sed 's/^.* //')
+
+cat <<EOF > "${KUBE_JOIN_FILE}"
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: JoinConfiguration
+discovery:
+  bootstrapToken:
+    token: "${TOKEN}"
+    apiServerEndpoint: "${APISERVER_ADVERTISE_ADDRESS}:6443"
+    caCertHashes:
+      - "sha256:${DISCOVERY_TOKEN_CA_CERT_HASH}"
+nodeRegistration:
+  kubeletExtraArgs:
+    cgroup-driver: "systemd"
+EOF
 
 echo -e "${GREEN}#### Master node provisioning complete ####.${NC}"
 

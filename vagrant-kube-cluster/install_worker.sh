@@ -33,6 +33,7 @@ CRICTL_VERSION="v1.32.0"
 SSH_DIR="/home/vagrant/.ssh"
 ROOT_SSH_DIR="/root/.ssh"
 VAGRANT_USER="vagrant"
+KUBE_JOIN_FILE="/vagrant/kubeadm-join-config.yaml"
 
 
 # 1. Set up SSH for vagrant user
@@ -140,7 +141,8 @@ sudo apt-get install -y \
     gnupg \
     lsb-release \
     socat \
-    net-tools
+    net-tools \
+    openssl
 
 # ============================
 # Install Containerd
@@ -224,16 +226,26 @@ if [ -z "$PUBLIC_IP" ]; then
   exit 1
 fi
 
-echo -e "${CYAN} nodeIP: ${PUBLIC_IP}...${NC}"
-sudo bash -c "cat <<EOF > /var/lib/kubelet/config.yaml
-apiVersion: kubelet.config.k8s.io/v1beta1
-kind: KubeletConfiguration
-cgroupDriver: systemd
-containerRuntime: remote
-containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
-podInfraContainerImage: registry.k8s.io/pause:3.9
-nodeIP: $PUBLIC_IP
-EOF"
+
+# ============================
+# Generate kubeadm Join Config
+# ============================
+echo -e "${CYAN}Installing yq to configure  kubeadm join configuration file ...${NC}"
+sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+sudo chmod +x /usr/bin/yq
+
+# ============================
+# Join the Cluster
+# ============================
+if [ -f "${KUBE_JOIN_FILE}" ]; then
+  echo -e "${CYAN}Joining the Kubernetes cluster...${NC}"
+  sudo yq eval ".nodeRegistration.kubeletExtraArgs[\"node-ip\"] = \"${PUBLIC_IP}\"" -i ${KUBE_JOIN_FILE}
+  sudo kubeadm join --config="${KUBE_JOIN_FILE}"
+else
+  echo -e "${RED}Error: kubeadm join configuration file not found at ${KUBE_JOIN_FILE}.${NC}"
+  exit 1
+fi
+
 
 # Restart and enable kubelet
 echo "Restarting and enabling kubelet..."
@@ -241,13 +253,8 @@ sudo systemctl daemon-reload
 sudo systemctl restart kubelet
 sudo systemctl enable kubelet
 
-# Retrieve kubeadm join command from master
-
-echo -e "${CYAN}Retrieving kubeadm join command from master...${NC}"
-JOIN_COMMAND=$(ssh -i /home/vagrant/.ssh/id_rsa -o StrictHostKeyChecking=no root@192.168.4.100 "kubeadm token create --print-join-command --ttl 0")
-echo "..."
-echo -e "${CYAN}Joining Kubernetes cluster...${NC}"
-eval "sudo $JOIN_COMMAND"
+echo -e "${CYAN} verify kubelet config in :/var/lib/kubelet/config.yaml ...${NC}"
+cat /var/lib/kubelet/config.yaml
 
 echo -e "${GREEN}#### Worker node provisioning complete ####.${NC}"
 echo ""

@@ -1,0 +1,12 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: JoinConfiguration
+discovery:
+  bootstrapToken:
+    token: "sfi0h4.fwmpzkuw4hfdv2hf"
+    apiServerEndpoint: "192.168.4.100:6443"
+    caCertHashes:
+      - "sha256:2535a35496c71ceba3e8c9a8ad5693327237b1123aab0be855490edd5db8edec"
+nodeRegistration:
+  kubeletExtraArgs:
+    cgroup-driver: "systemd"
+    node-ip: 192.168.4.103

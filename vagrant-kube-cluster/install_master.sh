@@ -217,6 +217,14 @@ if [ -z "$PUBLIC_IP" ]; then
 fi
 
 echo -e "${CYAN} nodeIP: ${PUBLIC_IP}...${NC}"
+
+# ============================
+# disabling Firewall
+# ============================
+echo -e "${CYAN}Disabling Firewall ${NC}"
+sudo systemctl stop ufw
+sudo systemctl disable ufw
+
 # ============================
 # Configure kubeadm
 # ============================

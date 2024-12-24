@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 # Variables
 # ============================
 NAMESPACE_ISTIO="istio-system"
-NAMESPACE_ISTIO_GATEWAY="istio-system"
+NAMESPACE_ISTIO_GATEWAY="istio-gateway"
 
 
 ########################################

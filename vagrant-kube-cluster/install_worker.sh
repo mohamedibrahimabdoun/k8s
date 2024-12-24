@@ -226,6 +226,12 @@ if [ -z "$PUBLIC_IP" ]; then
   exit 1
 fi
 
+# ============================
+# disabling Firewall
+# ============================
+echo -e "${CYAN}Disabling Firewall ${NC}"
+sudo systemctl stop ufw
+sudo systemctl disable ufw
 
 # ============================
 # Generate kubeadm Join Config
